@@ -280,11 +280,27 @@ namespace VirtualController
         {
             macroWatcher = new FileSystemWatcher(macroFolder, "*.csv");
             macroWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
-            macroWatcher.Changed += (s, e) => this.Invoke((Action)(() => LoadMacroList()));
-            macroWatcher.Created += (s, e) => this.Invoke((Action)(() => LoadMacroList()));
-            macroWatcher.Deleted += (s, e) => this.Invoke((Action)(() => LoadMacroList()));
-            macroWatcher.Renamed += (s, e) => this.Invoke((Action)(() => LoadMacroList()));
+            macroWatcher.Changed += MacroFolderChanged;
+            macroWatcher.Created += MacroFolderChanged;
+            macroWatcher.Deleted += MacroFolderChanged;
+            macroWatcher.Renamed += MacroFolderChanged;
             macroWatcher.EnableRaisingEvents = true;
+        }
+
+        // ファイル変更時のイベントハンドラ
+        private void MacroFolderChanged(object sender, FileSystemEventArgs e)
+        {
+            // マクロ再生中なら停止
+            if (isMacroPlaying)
+            {
+                this.Invoke((Action)(() => StopMacroIfPlaying()));
+                // マクロ一覧は停止後に更新
+                this.Invoke((Action)(() => LoadMacroList(false)));
+            }
+            else
+            {
+                this.Invoke((Action)(() => LoadMacroList(false)));
+            }
         }
 
         // 接続
