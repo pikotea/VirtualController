@@ -1,6 +1,6 @@
 ﻿namespace VirtualController
 {
-    partial class Form1
+    partial class MainForm
     {
         #region Windows フォーム デザイナーで生成されたコード
 
@@ -80,7 +80,8 @@
             this.UpButton.TabIndex = 2;
             this.UpButton.Text = "↑";
             this.UpButton.UseVisualStyleBackColor = true;
-            this.UpButton.Click += new System.EventHandler(this.UpButton_Click);
+            this.UpButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.UpButton_MouseDown);
+            this.UpButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.UpButton_MouseUp);
             // 
             // UpRightButton
             // 
@@ -91,7 +92,8 @@
             this.UpRightButton.TabIndex = 3;
             this.UpRightButton.Text = "↗";
             this.UpRightButton.UseVisualStyleBackColor = true;
-            this.UpRightButton.Click += new System.EventHandler(this.UpRightButton_Click);
+            this.UpRightButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.UpRightButton_MouseDown);
+            this.UpRightButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.UpRightButton_MouseUp);
             // 
             // UpLeftButton
             // 
@@ -102,7 +104,8 @@
             this.UpLeftButton.TabIndex = 4;
             this.UpLeftButton.Text = "↖";
             this.UpLeftButton.UseVisualStyleBackColor = true;
-            this.UpLeftButton.Click += new System.EventHandler(this.UpLeftButton_Click);
+            this.UpLeftButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.UpLeftButton_MouseDown);
+            this.UpLeftButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.UpLeftButton_MouseUp);
             // 
             // DownLeftButton
             // 
@@ -113,7 +116,8 @@
             this.DownLeftButton.TabIndex = 7;
             this.DownLeftButton.Text = "↙";
             this.DownLeftButton.UseVisualStyleBackColor = true;
-            this.DownLeftButton.Click += new System.EventHandler(this.DownLeftButton_Click);
+            this.DownLeftButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.DownLeftButton_MouseDown);
+            this.DownLeftButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.DownLeftButton_MouseUp);
             // 
             // DownRightButton
             // 
@@ -124,7 +128,8 @@
             this.DownRightButton.TabIndex = 6;
             this.DownRightButton.Text = "↘";
             this.DownRightButton.UseVisualStyleBackColor = true;
-            this.DownRightButton.Click += new System.EventHandler(this.DownRightButton_Click);
+            this.DownRightButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.DownRightButton_MouseDown);
+            this.DownRightButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.DownRightButton_MouseUp);
             // 
             // DownButton
             // 
@@ -135,7 +140,8 @@
             this.DownButton.TabIndex = 5;
             this.DownButton.Text = "↓";
             this.DownButton.UseVisualStyleBackColor = true;
-            this.DownButton.Click += new System.EventHandler(this.DownButton_Click);
+            this.DownButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.DownButton_MouseDown);
+            this.DownButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.DownButton_MouseUp);
             // 
             // RightButton
             // 
@@ -146,7 +152,8 @@
             this.RightButton.TabIndex = 8;
             this.RightButton.Text = "→";
             this.RightButton.UseVisualStyleBackColor = true;
-            this.RightButton.Click += new System.EventHandler(this.RightButton_Click);
+            this.RightButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.RightButton_MouseDown);
+            this.RightButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.RightButton_MouseUp);
             // 
             // LeftButton
             // 
@@ -157,7 +164,8 @@
             this.LeftButton.TabIndex = 9;
             this.LeftButton.Text = "←";
             this.LeftButton.UseVisualStyleBackColor = true;
-            this.LeftButton.Click += new System.EventHandler(this.LeftButton_Click);
+            this.LeftButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.LeftButton_MouseDown);
+            this.LeftButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.LeftButton_MouseUp);
             // 
             // XButton
             // 
@@ -168,7 +176,8 @@
             this.XButton.TabIndex = 12;
             this.XButton.Text = "X";
             this.XButton.UseVisualStyleBackColor = true;
-            this.XButton.Click += new System.EventHandler(this.XButton_Click);
+            this.XButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.XButton_MouseDown);
+            this.XButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.XButton_MouseUp);
             // 
             // RBButton
             // 
@@ -179,7 +188,8 @@
             this.RBButton.TabIndex = 11;
             this.RBButton.Text = "RB";
             this.RBButton.UseVisualStyleBackColor = true;
-            this.RBButton.Click += new System.EventHandler(this.RBButton_Click);
+            this.RBButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.RBButton_MouseDown);
+            this.RBButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.RBButton_MouseUp);
             // 
             // YButton
             // 
@@ -190,7 +200,8 @@
             this.YButton.TabIndex = 10;
             this.YButton.Text = "Y";
             this.YButton.UseVisualStyleBackColor = true;
-            this.YButton.Click += new System.EventHandler(this.YButton_Click);
+            this.YButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.YButton_MouseDown);
+            this.YButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.YButton_MouseUp);
             // 
             // AButton
             // 
@@ -201,7 +212,8 @@
             this.AButton.TabIndex = 15;
             this.AButton.Text = "A";
             this.AButton.UseVisualStyleBackColor = true;
-            this.AButton.Click += new System.EventHandler(this.AButton_Click);
+            this.AButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.AButton_MouseDown);
+            this.AButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.AButton_MouseUp);
             // 
             // LBButton
             // 
@@ -212,7 +224,8 @@
             this.LBButton.TabIndex = 14;
             this.LBButton.Text = "LB";
             this.LBButton.UseVisualStyleBackColor = true;
-            this.LBButton.Click += new System.EventHandler(this.LBButton_Click);
+            this.LBButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.LBButton_MouseDown);
+            this.LBButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.LBButton_MouseUp);
             // 
             // BButton
             // 
@@ -223,7 +236,8 @@
             this.BButton.TabIndex = 13;
             this.BButton.Text = "B";
             this.BButton.UseVisualStyleBackColor = true;
-            this.BButton.Click += new System.EventHandler(this.BButton_Click);
+            this.BButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.BButton_MouseDown);
+            this.BButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.BButton_MouseUp);
             // 
             // StartButton
             // 
@@ -234,7 +248,8 @@
             this.StartButton.TabIndex = 19;
             this.StartButton.Text = "START";
             this.StartButton.UseVisualStyleBackColor = true;
-            this.StartButton.Click += new System.EventHandler(this.StartButton_Click);
+            this.StartButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.StartButton_MouseDown);
+            this.StartButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.StartButton_MouseUp);
             // 
             // BackButton
             // 
@@ -245,7 +260,8 @@
             this.BackButton.TabIndex = 18;
             this.BackButton.Text = "BACK";
             this.BackButton.UseVisualStyleBackColor = true;
-            this.BackButton.Click += new System.EventHandler(this.BackButton_Click);
+            this.BackButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.BackButton_MouseDown);
+            this.BackButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.BackButton_MouseUp);
             // 
             // MacroListBox
             // 
@@ -444,7 +460,7 @@
             this.XAxisReverseCheckBox.TabIndex = 38;
             this.XAxisReverseCheckBox.Text = "左右反転";
             this.XAxisReverseCheckBox.UseVisualStyleBackColor = true;
-            this.XAxisReverseCheckBox.CheckedChanged += new System.EventHandler(this.XAxisReverseCheckBox_CheckedChanged);
+            this.XAxisReverseCheckBox.CheckedChanged += new System.EventHandler(this.XAxisReverseCheckBox_CheckedChanged);  
             // 
             // OpenMacroFolderButton
             // 

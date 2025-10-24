@@ -187,7 +187,7 @@ namespace VirtualController
             };
         }
 
-        // MacroFrameを内部クラスとして統合
+        // MacroFrameクラスをここに定義
         public class MacroFrame
         {
             public Dictionary<string, string> KeyOps = new Dictionary<string, string>();

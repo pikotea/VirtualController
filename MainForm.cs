@@ -1,11 +1,8 @@
-﻿using Nefarius.ViGEm.Client;
-using Nefarius.ViGEm.Client.Targets;
-using Nefarius.ViGEm.Client.Targets.Xbox360;
+﻿using Nefarius.ViGEm.Client.Targets.Xbox360;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -13,16 +10,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using VirtualController;
 
 
 namespace VirtualController
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         int frame = 16;
         string macroFolder = Path.Combine(Application.StartupPath, "micros");
-        List<MacroFrame> loadedMacro = new List<MacroFrame>();
+        List<MacroPlayer.MacroFrame> loadedMacro = new List<MacroPlayer.MacroFrame>();
         FileSystemWatcher macroWatcher;
 
         // 再生・停止制御用
@@ -59,7 +55,7 @@ namespace VirtualController
 
 
         // 2. コンストラクタで初期化
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
             controllerService = new ControllerService();
@@ -139,7 +135,8 @@ namespace VirtualController
             var macroNames = MacroListBox.SelectedItems.Cast<string>().ToList();
 
             // ここで全選択状態を解除
-            this.Invoke((Action)(() => {
+            this.Invoke((Action)(() =>
+            {
                 MacroEditTextBox.SelectionLength = 0;
                 MacroEditTextBox.SelectionStart = MacroEditTextBox.TextLength;
             }));
@@ -265,244 +262,6 @@ namespace VirtualController
             }
         }
 
-        // 上
-        private void UpButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                new Dictionary<Xbox360Axis, short>
-                {
-                    { Xbox360Axis.LeftThumbY, short.MaxValue },
-                },
-                null,
-                frame
-            );
-        }
-
-        // 下
-        private void DownButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                new Dictionary<Xbox360Axis, short>
-                {
-                    { Xbox360Axis.LeftThumbY, short.MinValue },
-                },
-                null,
-                frame
-            );
-        }
-
-        // 左
-        private void LeftButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                new Dictionary<Xbox360Axis, short>
-                {
-                    { Xbox360Axis.LeftThumbX, short.MinValue },
-                },
-                null,
-                frame
-            );
-        }
-
-        // 右
-        private void RightButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                new Dictionary<Xbox360Axis, short>
-                {
-                    { Xbox360Axis.LeftThumbX, short.MaxValue },
-                },
-                null,
-                frame
-            );
-        }
-
-
-        
-
-        // Aボタン
-        private void AButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                null,
-                new Dictionary<Xbox360Button, bool>
-                {
-                    { Xbox360Button.A, true }
-                },
-                frame
-            );
-        }
-
-        // Bボタン
-        private void BButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                null,
-                new Dictionary<Xbox360Button, bool>
-                {
-                    { Xbox360Button.B, true }
-                },
-                frame
-            );
-        }
-
-        //　Xボタン
-        private void XButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                null,
-                new Dictionary<Xbox360Button, bool>
-                {
-                    { Xbox360Button.X, true }
-                },
-                frame
-            );
-        }
-
-        // Yボタン
-        private void YButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                null,
-                new Dictionary<Xbox360Button, bool>
-                {
-                    { Xbox360Button.Y, true }
-                },
-                frame
-            );
-        }
-
-        // RBボタン
-        private void RBButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                null,
-                new Dictionary<Xbox360Button, bool>
-                {
-                    { Xbox360Button.RightShoulder, true }
-                },
-                frame
-            );
-        }
-
-
-        // LBボタン
-        private void LBButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                null,
-                new Dictionary<Xbox360Button, bool>
-                {
-                    { Xbox360Button.LeftShoulder, true }
-                },
-                frame
-            );
-        }
-
-
-        // STARTボタン
-        private void StartButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                null,
-                new Dictionary<Xbox360Button, bool>
-                {
-                    { Xbox360Button.Start, true }
-                },
-                frame
-            );
-        }
-
-        // BACKボタン
-        private void BackButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                null,
-                new Dictionary<Xbox360Button, bool>
-                {
-                    { Xbox360Button.Back, true }
-                },
-                frame
-            );
-        }
-
-        // 右下
-        private void DownRightButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                new Dictionary<Xbox360Axis, short>
-                {
-                    { Xbox360Axis.LeftThumbX, short.MaxValue },
-                    { Xbox360Axis.LeftThumbY, short.MinValue },
-                },
-                null,
-                frame
-            );
-        }
-
-        // 左上
-        private void UpLeftButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                new Dictionary<Xbox360Axis, short>
-                {
-                    { Xbox360Axis.LeftThumbX, short.MinValue },
-                    { Xbox360Axis.LeftThumbY, short.MaxValue },
-                },
-                null,
-                frame
-            );
-        }
-
-        // 右上
-        private void UpRightButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                new Dictionary<Xbox360Axis, short>
-                {
-                    { Xbox360Axis.LeftThumbX, short.MaxValue },
-                    { Xbox360Axis.LeftThumbY, short.MaxValue },
-                },
-                null,
-                frame
-            );
-        }
-
-        // 左下
-        private void DownLeftButton_Click(object sender, EventArgs e)
-        {
-            controllerService.SetInputs(
-                new Dictionary<Xbox360Axis, short>
-                {
-                    { Xbox360Axis.LeftThumbX, short.MinValue },
-                    { Xbox360Axis.LeftThumbY, short.MinValue },
-                },
-                null,
-                frame
-            );
-        }
-
-        private void Macro1Button_Click(object sender, EventArgs e)
-        {
-            var macroButtons = new[]
-            {
-                Xbox360Button.X,
-                Xbox360Button.A,
-                Xbox360Button.Y,
-                Xbox360Button.B,
-                Xbox360Button.RightShoulder,
-                Xbox360Button.LeftShoulder
-            };
-
-            foreach (var btn in macroButtons)
-            {
-                controllerService.SetInputs(
-                    null,
-                    new Dictionary<Xbox360Button, bool> { { btn, true } },
-                    frame
-                );
-            }
-        }
 
         // マクロ選択時のロード（複数選択対応・編集エリア表示）
         // --- マクロ選択時にラベル表示・保存 ---
@@ -518,7 +277,7 @@ namespace VirtualController
                 string macroName = macroNameObj as string;
                 if (string.IsNullOrEmpty(macroName)) continue;
                 // ここで自作MacroFrameのLoadMacroFileを使う
-                var macroFrames = MacroFrame.LoadMacroFile(Path.Combine(macroFolder, macroName + ".csv"));
+                var macroFrames = MacroPlayer.MacroFrame.LoadMacroFile(Path.Combine(macroFolder, macroName + ".csv"));
                 if (macroFrames != null && macroFrames.Count > 0)
                 {
                     loadedMacro.AddRange(macroFrames);
@@ -634,11 +393,11 @@ namespace VirtualController
                 string path = Path.Combine(macroFolder, editingMacroName + ".csv");
                 File.WriteAllText(path, MacroEditTextBox.Text, Encoding.UTF8);
                 lastLoadedMacroText = MacroEditTextBox.Text;
-                // MacroPlayer経由で再ロード
-                loadedMacro = MacroFrame.LoadMacroFile(path);
+                loadedMacro = MacroPlayer.MacroFrame.LoadMacroFile(path);
                 LoadMacroList(false);
                 OverwriteSaveButton.Enabled = false;
-                this.Invoke((Action)(() => {
+                this.Invoke((Action)(() =>
+                {
                     MacroEditTextBox.SelectionLength = 0;
                     MacroEditTextBox.SelectionStart = MacroEditTextBox.TextLength;
                 }));
@@ -876,227 +635,277 @@ namespace VirtualController
                 MessageBox.Show("フォルダを開けませんでした。\n" + ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        // 上
+        private void UpButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbY, short.MaxValue } },
+                null, 0);
+        }
+        private void UpButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbY, 0 } },
+                null, 0);
+        }
+
+        // 下
+        private void DownButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbY, short.MinValue } },
+                null, 0);
+        }
+        private void DownButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbY, 0 } },
+                null, 0);
+        }
+
+        // 左
+        private void LeftButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbX, short.MinValue } },
+                null, 0);
+        }
+        private void LeftButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbX, 0 } },
+                null, 0);
+        }
+
+        // 右
+        private void RightButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbX, short.MaxValue } },
+                null, 0);
+        }
+        private void RightButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbX, 0 } },
+                null, 0);
+        }
+
+        // 右下
+        private void DownRightButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short>
+                {
+                    { Xbox360Axis.LeftThumbX, short.MaxValue },
+                    { Xbox360Axis.LeftThumbY, short.MinValue }
+                },
+                null, 0);
+        }
+        private void DownRightButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short>
+                {
+                    { Xbox360Axis.LeftThumbX, 0 },
+                    { Xbox360Axis.LeftThumbY, 0 }
+                },
+                null, 0);
+        }
+
+        // 左上
+        private void UpLeftButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short>
+                {
+                    { Xbox360Axis.LeftThumbX, short.MinValue },
+                    { Xbox360Axis.LeftThumbY, short.MaxValue }
+                },
+                null, 0);
+        }
+        private void UpLeftButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short>
+                {
+                    { Xbox360Axis.LeftThumbX, 0 },
+                    { Xbox360Axis.LeftThumbY, 0 }
+                },
+                null, 0);
+        }
+
+        // 右上
+        private void UpRightButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short>
+                {
+                    { Xbox360Axis.LeftThumbX, short.MaxValue },
+                    { Xbox360Axis.LeftThumbY, short.MaxValue }
+                },
+                null, 0);
+        }
+        private void UpRightButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short>
+                {
+                    { Xbox360Axis.LeftThumbX, 0 },
+                    { Xbox360Axis.LeftThumbY, 0 }
+                },
+                null, 0);
+        }
+
+        // 左下
+        private void DownLeftButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short>
+                {
+                    { Xbox360Axis.LeftThumbX, short.MinValue },
+                    { Xbox360Axis.LeftThumbY, short.MinValue }
+                },
+                null, 0);
+        }
+        private void DownLeftButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                new Dictionary<Xbox360Axis, short>
+                {
+                    { Xbox360Axis.LeftThumbX, 0 },
+                    { Xbox360Axis.LeftThumbY, 0 }
+                },
+                null, 0);
+        }
+
+        // Aボタン
+        private void AButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.A, true } },
+                0);
+        }
+        private void AButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.A, false } },
+                0);
+        }
+
+        // Bボタン
+        private void BButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.B, true } },
+                0);
+        }
+        private void BButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.B, false } },
+                0);
+        }
+
+        // Xボタン
+        private void XButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.X, true } },
+                0);
+        }
+        private void XButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.X, false } },
+                0);
+        }
+
+        // Yボタン
+        private void YButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Y, true } },
+                0);
+        }
+        private void YButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Y, false } },
+                0);
+        }
+
+        // RBボタン
+        private void RBButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.RightShoulder, true } },
+                0);
+        }
+        private void RBButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.RightShoulder, false } },
+                0);
+        }
+
+        // LBボタン
+        private void LBButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.LeftShoulder, true } },
+                0);
+        }
+        private void LBButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.LeftShoulder, false } },
+                0);
+        }
+
+        // STARTボタン
+        private void StartButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Start, true } },
+                0);
+        }
+        private void StartButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Start, false } },
+                0);
+        }
+
+        // BACKボタン
+        private void BackButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Back, true } },
+                0);
+        }
+        private void BackButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.SetInputs(
+                null,
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Back, false } },
+                0);
+        }
     }
 }
-
-public static class ControllerExtension
-{
-
-    /// <summary>
-    /// 複数の軸・ボタンを同時に押す（duration後に全て離す）
-    /// </summary>
-    public static void SetInputs(
-        IXbox360Controller controller,
-        Dictionary<Xbox360Axis, short> axisValues,
-        Dictionary<Xbox360Button, bool> buttonStates,
-        int duration)
-    {
-        // 軸を同時にセット
-        if (axisValues != null)
-        {
-            foreach (var kvp in axisValues)
-            {
-                controller.SetAxisValue(kvp.Key, kvp.Value);
-            }
-        }
-        // ボタンを同時にセット
-        if (buttonStates != null)
-        {
-            foreach (var kvp in buttonStates)
-            {
-                controller.SetButtonState(kvp.Key, kvp.Value);
-            }
-        }
-        Thread.Sleep(duration);
-        // 軸を全て0に戻す
-        if (axisValues != null)
-        {
-            foreach (var kvp in axisValues)
-            {
-                controller.SetAxisValue(kvp.Key, 0);
-            }
-        }
-        // ボタンを全て離す
-        if (buttonStates != null)
-        {
-            foreach (var kvp in buttonStates)
-            {
-                controller.SetButtonState(kvp.Key, false);
-            }
-        }
-    }
-}
-
-// キーの状態管理（継続ON/OFF用）
-public class MacroKeyState
-{
-    public Dictionary<string, bool> KeyStates = new Dictionary<string, bool>
-    {
-        { "UP", false }, { "DOWN", false }, { "LEFT", false }, { "RIGHT", false },
-        { "A", false }, { "B", false }, { "X", false }, { "Y", false }, { "LB", false }, { "RB", false }
-    };
-}
-// 1フレーム分の入力情報
-public class MacroFrame
-{
-    // 各フレームのキー状態（ON/OFFのみ。WAITはブランクで表現）
-    public Dictionary<string, string> KeyOps = new Dictionary<string, string>();
-
-    // 追加: WaitFrames プロパティ
-    public int WaitFrames { get; set; } = 0;
-
-    // --- 新しい実行形式パース ---
-    public static List<Dictionary<string, string>> ParseToFrameArray(string path)
-    {
-        var lines = File.ReadAllLines(path);
-
-        var frameCounts = new List<int>();
-        var frameKeys = new List<List<string>>();
-        int totalFrames = 0;
-
-        foreach (var line in lines)
-        {
-            var trimmed = line.Trim();
-            if (string.IsNullOrEmpty(trimmed))
-                continue;
-
-            int frameCount = 1;
-            string keyPart = trimmed;
-
-            // 行頭のフレーム数を抽出
-            int colonIdx = trimmed.IndexOf(':');
-            if (colonIdx >= 0)
-            {
-                var frameStr = trimmed.Substring(0, colonIdx).Trim();
-                if (!int.TryParse(frameStr, out frameCount) || frameCount < 1)
-                    frameCount = 1;
-                keyPart = trimmed.Substring(colonIdx + 1).Trim();
-            }
-
-            // キーリストを抽出
-            var keys = keyPart.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                              .Select(k => k.Trim().ToUpper())
-                              .Where(k => !string.IsNullOrEmpty(k))
-                              .ToList();
-
-            frameCounts.Add(frameCount);
-            frameKeys.Add(keys);
-            totalFrames += frameCount;
-        }
-
-        // 合計フレーム数で配列を作成
-        var frameArray = new List<Dictionary<string, string>>();
-        for (int i = 0; i < totalFrames; i++)
-            frameArray.Add(new Dictionary<string, string>());
-
-        // フレーム操作カーソルで各行を反映
-        int cursor = 0;
-        var lastOnKeys = new HashSet<string>();
-        for (int specIdx = 0; specIdx < frameCounts.Count; specIdx++)
-        {
-            int frameCount = frameCounts[specIdx];
-            var keys = frameKeys[specIdx];
-
-            // 最初のフレームだけON
-            if (frameCount > 0)
-            {
-                foreach (var key in keys)
-                {
-                    frameArray[cursor][key] = "ON";
-                    lastOnKeys.Add(key);
-                }
-            }
-            // 2フレーム目以降は空（何もセットしない）
-
-            // OFFを次フレームにセット
-            int offFrameIdx = cursor + frameCount;
-            if (offFrameIdx < frameArray.Count)
-            {
-                foreach (var key in keys)
-                {
-                    frameArray[offFrameIdx][key] = "OFF";
-                    lastOnKeys.Remove(key);
-                }
-            }
-            cursor += frameCount;
-        }
-
-        // 最後にONになっているキーをOFFにするフレームを追加
-        if (lastOnKeys.Count > 0)
-        {
-            var offFrame = new Dictionary<string, string>();
-            foreach (var key in lastOnKeys)
-                offFrame[key] = "OFF";
-            frameArray.Add(offFrame);
-        }
-
-        return frameArray;
-    }
-
-    public static List<MacroFrame> LoadMacroFile(string path)
-    {
-        var result = new List<MacroFrame>();
-        foreach (var line in File.ReadAllLines(path))
-        {
-            var frame = Parse(line);
-            result.Add(frame);
-        }
-        return result;
-    }
-
-    public static MacroFrame Parse(string line)
-    {
-        var frame = new MacroFrame();
-        if (string.IsNullOrWhiteSpace(line)) return frame;
-        var items = line.Split(',');
-        foreach (var item in items)
-        {
-            var kv = item.Split('=');
-            if (kv.Length == 2)
-            {
-                string key = kv[0].Trim().ToUpper(); // キーを大文字化
-                string val = kv[1].Trim().ToUpper(); // 値も大文字化
-                if (key == "WAIT")
-                {
-                    if (int.TryParse(val, out int wait))
-                        frame.WaitFrames = wait;
-                }
-                else
-                {
-                    frame.KeyOps[key] = val; // ON/OFF
-                }
-            }
-            else if (kv.Length == 1)
-            {
-                string key = kv[0].Trim().ToUpper(); // キーを大文字化
-                frame.KeyOps[key] = "ON"; // 省略形はON
-            }
-        }
-        return frame;
-    }
-
-    public static void AllOff(IXbox360Controller controller)
-    {
-        controller.SetAxisValue(Xbox360Axis.LeftThumbY, 0);
-        controller.SetAxisValue(Xbox360Axis.LeftThumbX, 0);
-        controller.SetButtonState(Xbox360Button.A, false);
-        controller.SetButtonState(Xbox360Button.B, false);
-        controller.SetButtonState(Xbox360Button.X, false);
-        controller.SetButtonState(Xbox360Button.Y, false);
-        controller.SetButtonState(Xbox360Button.LeftShoulder, false);
-        controller.SetButtonState(Xbox360Button.RightShoulder, false);
-    }
-
-    // FrameSpecクラスを外に定義
-    private class FrameSpec
-    {
-        public Dictionary<string, int> KeyDurations;
-        public int WaitFrames;
-        public FrameSpec(Dictionary<string, int> keyDurations, int waitFrames)
-        {
-            KeyDurations = keyDurations;
-            WaitFrames = waitFrames;
-        }
-    }
-}
-
