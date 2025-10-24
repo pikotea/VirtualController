@@ -641,13 +641,13 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbY, short.MaxValue } },
-                null, 0);
+                null);
         }
         private void UpButton_MouseUp(object sender, MouseEventArgs e)
         {
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbY, 0 } },
-                null, 0);
+                null);
         }
 
         // 下
@@ -655,13 +655,13 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbY, short.MinValue } },
-                null, 0);
+                null);
         }
         private void DownButton_MouseUp(object sender, MouseEventArgs e)
         {
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbY, 0 } },
-                null, 0);
+                null);
         }
 
         // 左
@@ -669,13 +669,13 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbX, short.MinValue } },
-                null, 0);
+                null);
         }
         private void LeftButton_MouseUp(object sender, MouseEventArgs e)
         {
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbX, 0 } },
-                null, 0);
+                null);
         }
 
         // 右
@@ -683,13 +683,13 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbX, short.MaxValue } },
-                null, 0);
+                null);
         }
         private void RightButton_MouseUp(object sender, MouseEventArgs e)
         {
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short> { { Xbox360Axis.LeftThumbX, 0 } },
-                null, 0);
+                null);
         }
 
         // 右下
@@ -701,7 +701,7 @@ namespace VirtualController
                     { Xbox360Axis.LeftThumbX, short.MaxValue },
                     { Xbox360Axis.LeftThumbY, short.MinValue }
                 },
-                null, 0);
+                null);
         }
         private void DownRightButton_MouseUp(object sender, MouseEventArgs e)
         {
@@ -711,7 +711,7 @@ namespace VirtualController
                     { Xbox360Axis.LeftThumbX, 0 },
                     { Xbox360Axis.LeftThumbY, 0 }
                 },
-                null, 0);
+                null);
         }
 
         // 左上
@@ -723,7 +723,7 @@ namespace VirtualController
                     { Xbox360Axis.LeftThumbX, short.MinValue },
                     { Xbox360Axis.LeftThumbY, short.MaxValue }
                 },
-                null, 0);
+                null);
         }
         private void UpLeftButton_MouseUp(object sender, MouseEventArgs e)
         {
@@ -733,7 +733,7 @@ namespace VirtualController
                     { Xbox360Axis.LeftThumbX, 0 },
                     { Xbox360Axis.LeftThumbY, 0 }
                 },
-                null, 0);
+                null);
         }
 
         // 右上
@@ -745,7 +745,7 @@ namespace VirtualController
                     { Xbox360Axis.LeftThumbX, short.MaxValue },
                     { Xbox360Axis.LeftThumbY, short.MaxValue }
                 },
-                null, 0);
+                null);
         }
         private void UpRightButton_MouseUp(object sender, MouseEventArgs e)
         {
@@ -755,7 +755,7 @@ namespace VirtualController
                     { Xbox360Axis.LeftThumbX, 0 },
                     { Xbox360Axis.LeftThumbY, 0 }
                 },
-                null, 0);
+                null);
         }
 
         // 左下
@@ -767,7 +767,7 @@ namespace VirtualController
                     { Xbox360Axis.LeftThumbX, short.MinValue },
                     { Xbox360Axis.LeftThumbY, short.MinValue }
                 },
-                null, 0);
+                null);
         }
         private void DownLeftButton_MouseUp(object sender, MouseEventArgs e)
         {
@@ -777,7 +777,7 @@ namespace VirtualController
                     { Xbox360Axis.LeftThumbX, 0 },
                     { Xbox360Axis.LeftThumbY, 0 }
                 },
-                null, 0);
+                null);
         }
 
         // Aボタン
@@ -785,15 +785,13 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.A, true } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.A, true } });
         }
         private void AButton_MouseUp(object sender, MouseEventArgs e)
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.A, false } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.A, false } });
         }
 
         // Bボタン
@@ -801,15 +799,13 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.B, true } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.B, true } });
         }
         private void BButton_MouseUp(object sender, MouseEventArgs e)
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.B, false } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.B, false } });
         }
 
         // Xボタン
@@ -817,15 +813,13 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.X, true } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.X, true } });
         }
         private void XButton_MouseUp(object sender, MouseEventArgs e)
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.X, false } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.X, false } });
         }
 
         // Yボタン
@@ -833,15 +827,13 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Y, true } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Y, true } });
         }
         private void YButton_MouseUp(object sender, MouseEventArgs e)
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Y, false } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Y, false } });
         }
 
         // RBボタン
@@ -849,15 +841,13 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.RightShoulder, true } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.RightShoulder, true } });         
         }
         private void RBButton_MouseUp(object sender, MouseEventArgs e)
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.RightShoulder, false } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.RightShoulder, false } });
         }
 
         // LBボタン
@@ -865,15 +855,13 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.LeftShoulder, true } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.LeftShoulder, true } });
         }
         private void LBButton_MouseUp(object sender, MouseEventArgs e)
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.LeftShoulder, false } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.LeftShoulder, false } });
         }
 
         // STARTボタン
@@ -881,15 +869,13 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Start, true } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Start, true } });
         }
         private void StartButton_MouseUp(object sender, MouseEventArgs e)
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Start, false } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Start, false } });
         }
 
         // BACKボタン
@@ -897,15 +883,13 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Back, true } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Back, true } });
         }
         private void BackButton_MouseUp(object sender, MouseEventArgs e)
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Back, false } },
-                0);
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.Back, false } });
         }
     }
 }

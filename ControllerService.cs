@@ -3,6 +3,7 @@ using Nefarius.ViGEm.Client.Targets;
 using Nefarius.ViGEm.Client.Targets.Xbox360;
 using System.Collections.Generic;
 using System.Threading;
+using System.Diagnostics;
 
 namespace VirtualController
 {
@@ -44,8 +45,9 @@ namespace VirtualController
             }
         }
 
-        public void SetInputs(Dictionary<Xbox360Axis, short> axisValues, Dictionary<Xbox360Button, bool> buttonStates, int duration)
+        public void SetInputs(Dictionary<Xbox360Axis, short> axisValues, Dictionary<Xbox360Button, bool> buttonStates)
         {
+            Debug.WriteLine("SetInputs called");
             if (axisValues != null)
             {
                 foreach (var kvp in axisValues)
@@ -58,21 +60,6 @@ namespace VirtualController
                 foreach (var kvp in buttonStates)
                 {
                     controller.SetButtonState(kvp.Key, kvp.Value);
-                }
-            }
-            Thread.Sleep(duration);
-            if (axisValues != null)
-            {
-                foreach (var kvp in axisValues)
-                {
-                    controller.SetAxisValue(kvp.Key, 0);
-                }
-            }
-            if (buttonStates != null)
-            {
-                foreach (var kvp in buttonStates)
-                {
-                    controller.SetButtonState(kvp.Key, false);
                 }
             }
         }
