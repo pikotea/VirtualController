@@ -13,14 +13,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using VirtualController;
 
 
 namespace VirtualController
 {
     public partial class Form1 : Form
     {
-        ViGEmClient client;
-        IXbox360Controller controller;
         int frame = 16;
         string macroFolder = Path.Combine(Application.StartupPath, "micros");
         List<MacroFrame> loadedMacro = new List<MacroFrame>();
@@ -34,6 +33,11 @@ namespace VirtualController
         private string lastLoadedMacroText = "";
 
         private const string SettingsFile = "settings.ini";
+
+        // 1. フィールド追加
+        private MacroManager macroManager;
+        private ControllerService controllerService;
+        private MacroPlayer macroPlayer;
 
         /// <summary>
         /// 必要なデザイナー変数です。
@@ -54,12 +58,13 @@ namespace VirtualController
         }
 
 
+        // 2. コンストラクタで初期化
         public Form1()
         {
             InitializeComponent();
-            client = new ViGEmClient();
-            controller = this.client.CreateXbox360Controller();
-            if (!Directory.Exists(macroFolder)) Directory.CreateDirectory(macroFolder);
+            controllerService = new ControllerService();
+            macroManager = new MacroManager(macroFolder);
+            macroPlayer = new MacroPlayer(controllerService, macroFolder); // 追加
             StartMacroFolderWatcher();
             LoadMacroList();
         }
@@ -82,10 +87,9 @@ namespace VirtualController
             var selectedNames = MacroListBox.SelectedItems.Cast<string>().ToList();
 
             MacroListBox.Items.Clear();
-            var files = Directory.GetFiles(macroFolder, "*.csv");
-            foreach (var file in files)
+            var macroNames = macroManager.GetMacroNames(); // 変更
+            foreach (var name in macroNames)
             {
-                var name = Path.GetFileNameWithoutExtension(file);
                 MacroListBox.Items.Add(name);
             }
 
@@ -140,123 +144,24 @@ namespace VirtualController
                 MacroEditTextBox.SelectionStart = MacroEditTextBox.TextLength;
             }));
 
-            Task.Run(() =>
+            // --- MacroPlayerを利用 ---
+            Task.Run(async () =>
             {
                 try
                 {
-                    do
-                    {
-                        double totalWaitMs = playWaitFrames * frameMs;
-                        if (totalWaitMs > 0)
-                        {
-                            if (token.IsCancellationRequested) break;
-                            Thread.Sleep((int)totalWaitMs);
-                        }
-
-                        string innerMacroName = null;
-                        if (isRandom && macroNames.Count > 0)
-                        {
-                            var rand = new Random();
-                            innerMacroName = macroNames[rand.Next(macroNames.Count)];
-                        }
-                        else if (macroNames.Count > 0)
-                        {
-                            innerMacroName = macroNames[0];
-                        }
-
-                        if (string.IsNullOrEmpty(innerMacroName)) break;
-
-                        string path = Path.Combine(macroFolder, innerMacroName + ".csv");
-                        var frameArray = MacroFrame.ParseToFrameArray(path);
-                        var keyState = new MacroKeyState();
-
-                        int i = 0;
-                        var sw = System.Diagnostics.Stopwatch.StartNew();
-                        double nextFrameTime = sw.Elapsed.TotalMilliseconds;
-                        while (i < frameArray.Count)
-                        {
-                            if (token.IsCancellationRequested) break;
-
-                            int waitCount = 0;
-                            while (i < frameArray.Count && frameArray[i].Count == 0)
-                            {
-                                waitCount++;
-                                i++;
-                            }
-                            if (waitCount > 0)
-                            {
-                                nextFrameTime += waitCount * frameMs;
-                                while (sw.Elapsed.TotalMilliseconds < nextFrameTime)
-                                {
-                                    if (token.IsCancellationRequested) break;
-                                    Thread.Sleep(1);
-                                }
-                                continue;
-                            }
-
-                            var frameDict = frameArray[i];
-                            foreach (var kv in frameDict)
-                            {
-                                string key = kv.Key.ToUpper();
-                                string val = kv.Value.ToUpper();
-                                if (val == "ON")
-                                    keyState.KeyStates[key] = true;
-                                else if (val == "OFF")
-                                    keyState.KeyStates[key] = false;
-                            }
-
-                            short y = 0, x = 0;
-                            if (keyState.KeyStates["UP"] && !keyState.KeyStates["DOWN"]) y = short.MaxValue;
-                            else if (keyState.KeyStates["DOWN"] && !keyState.KeyStates["UP"]) y = short.MinValue;
-
-                            bool reverse = false;
-                            this.Invoke((Action)(() => { reverse = XAxisReverseCheckBox.Checked; }));
-
-                            if (!reverse)
-                            {
-                                if (keyState.KeyStates["LEFT"] && !keyState.KeyStates["RIGHT"]) x = short.MinValue;
-                                else if (keyState.KeyStates["RIGHT"] && !keyState.KeyStates["LEFT"]) x = short.MaxValue;
-                            }
-                            else
-                            {
-                                if (keyState.KeyStates["LEFT"] && !keyState.KeyStates["RIGHT"]) x = short.MaxValue;
-                                else if (keyState.KeyStates["RIGHT"] && !keyState.KeyStates["LEFT"]) x = short.MinValue;
-                            }
-
-                            controller.SetAxisValue(Xbox360Axis.LeftThumbY, y);
-                            controller.SetAxisValue(Xbox360Axis.LeftThumbX, x);
-
-                            controller.SetButtonState(Xbox360Button.A, keyState.KeyStates["A"]);
-                            controller.SetButtonState(Xbox360Button.B, keyState.KeyStates["B"]);
-                            controller.SetButtonState(Xbox360Button.X, keyState.KeyStates["X"]);
-                            controller.SetButtonState(Xbox360Button.Y, keyState.KeyStates["Y"]);
-                            controller.SetButtonState(Xbox360Button.LeftShoulder, keyState.KeyStates["LB"]);
-                            controller.SetButtonState(Xbox360Button.RightShoulder, keyState.KeyStates["RB"]);
-
-                            nextFrameTime += frameMs;
-                            while (sw.Elapsed.TotalMilliseconds < nextFrameTime)
-                            {
-                                if (token.IsCancellationRequested) break;
-                                Thread.Sleep(1);
-                            }
-                            i++;
-                        }
-                        if (i == frameArray.Count)
-                        {
-                            nextFrameTime += frameMs;
-                            while (sw.Elapsed.TotalMilliseconds < nextFrameTime)
-                            {
-                                if (token.IsCancellationRequested) break;
-                                Thread.Sleep(1);
-                            }
-                        }
-                        MacroFrame.AllOff(controller);
-
-                    } while (isRepeat && !token.IsCancellationRequested);
+                    await macroPlayer.PlayAsync(
+                        macroNames,
+                        frameMs,
+                        playWaitFrames,
+                        isRepeat,
+                        isRandom,
+                        XAxisReverseCheckBox.Checked,
+                        frame,
+                        token
+                    );
                 }
                 finally
                 {
-                    // UIを元に戻す
                     this.Invoke((Action)(() =>
                     {
                         PlayMacroButton.Enabled = true;
@@ -272,7 +177,7 @@ namespace VirtualController
         {
             if (!isMacroPlaying) return;
             macroCancelSource?.Cancel();
-            MacroFrame.AllOff(controller);
+            controllerService.AllOff(); // 変更
         }
 
         // フォルダ監視でマクロ一覧リロード
@@ -306,14 +211,14 @@ namespace VirtualController
         // 接続
         private void ConnectButton_Click(object sender, EventArgs e)
         {
-            this.controller.Connect();
+            controllerService.Connect();
             this.SetControllerButtonsEnabled(true);
         }
 
         // 切断
         private void DisconnectButton_Click(object sender, EventArgs e)
         {
-            this.controller.Disconnect();
+            controllerService.Disconnect();
             this.SetControllerButtonsEnabled(false);
         }
 
@@ -363,8 +268,7 @@ namespace VirtualController
         // 上
         private void UpButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
                     { Xbox360Axis.LeftThumbY, short.MaxValue },
@@ -377,8 +281,7 @@ namespace VirtualController
         // 下
         private void DownButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
                     { Xbox360Axis.LeftThumbY, short.MinValue },
@@ -391,8 +294,7 @@ namespace VirtualController
         // 左
         private void LeftButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
                     { Xbox360Axis.LeftThumbX, short.MinValue },
@@ -405,8 +307,7 @@ namespace VirtualController
         // 右
         private void RightButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
                     { Xbox360Axis.LeftThumbX, short.MaxValue },
@@ -422,8 +323,7 @@ namespace VirtualController
         // Aボタン
         private void AButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 null,
                 new Dictionary<Xbox360Button, bool>
                 {
@@ -436,8 +336,7 @@ namespace VirtualController
         // Bボタン
         private void BButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 null,
                 new Dictionary<Xbox360Button, bool>
                 {
@@ -450,8 +349,7 @@ namespace VirtualController
         //　Xボタン
         private void XButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 null,
                 new Dictionary<Xbox360Button, bool>
                 {
@@ -464,8 +362,7 @@ namespace VirtualController
         // Yボタン
         private void YButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 null,
                 new Dictionary<Xbox360Button, bool>
                 {
@@ -478,8 +375,7 @@ namespace VirtualController
         // RBボタン
         private void RBButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 null,
                 new Dictionary<Xbox360Button, bool>
                 {
@@ -493,8 +389,7 @@ namespace VirtualController
         // LBボタン
         private void LBButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 null,
                 new Dictionary<Xbox360Button, bool>
                 {
@@ -508,8 +403,7 @@ namespace VirtualController
         // STARTボタン
         private void StartButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 null,
                 new Dictionary<Xbox360Button, bool>
                 {
@@ -522,8 +416,7 @@ namespace VirtualController
         // BACKボタン
         private void BackButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 null,
                 new Dictionary<Xbox360Button, bool>
                 {
@@ -536,8 +429,7 @@ namespace VirtualController
         // 右下
         private void DownRightButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
                     { Xbox360Axis.LeftThumbX, short.MaxValue },
@@ -551,8 +443,7 @@ namespace VirtualController
         // 左上
         private void UpLeftButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
                     { Xbox360Axis.LeftThumbX, short.MinValue },
@@ -566,8 +457,7 @@ namespace VirtualController
         // 右上
         private void UpRightButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
                     { Xbox360Axis.LeftThumbX, short.MaxValue },
@@ -581,8 +471,7 @@ namespace VirtualController
         // 左下
         private void DownLeftButton_Click(object sender, EventArgs e)
         {
-            ControllerExtension.SetInputs(
-                controller,
+            controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
                     { Xbox360Axis.LeftThumbX, short.MinValue },
@@ -607,8 +496,7 @@ namespace VirtualController
 
             foreach (var btn in macroButtons)
             {
-                ControllerExtension.SetInputs(
-                    controller,
+                controllerService.SetInputs(
                     null,
                     new Dictionary<Xbox360Button, bool> { { btn, true } },
                     frame
@@ -620,7 +508,6 @@ namespace VirtualController
         // --- マクロ選択時にラベル表示・保存 ---
         private void MacroListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // マクロ選択変更時は自動停止
             StopMacroIfPlaying();
 
             loadedMacro.Clear();
@@ -630,8 +517,8 @@ namespace VirtualController
             {
                 string macroName = macroNameObj as string;
                 if (string.IsNullOrEmpty(macroName)) continue;
-                string path = Path.Combine(macroFolder, macroName + ".csv");
-                var macroFrames = MacroFrame.LoadMacroFile(path);
+                // ここで自作MacroFrameのLoadMacroFileを使う
+                var macroFrames = MacroFrame.LoadMacroFile(Path.Combine(macroFolder, macroName + ".csv"));
                 if (macroFrames != null && macroFrames.Count > 0)
                 {
                     loadedMacro.AddRange(macroFrames);
@@ -642,8 +529,7 @@ namespace VirtualController
             // 編集エリアに内容表示
             if (lastMacroName != null)
             {
-                string path = Path.Combine(macroFolder, lastMacroName + ".csv");
-                MacroEditTextBox.Text = File.ReadAllText(path);
+                MacroEditTextBox.Text = macroManager.LoadMacroText(lastMacroName); // 変更
                 MacroEditTextBox.Enabled = true;
                 editingMacroName = lastMacroName;
                 lastLoadedMacroText = MacroEditTextBox.Text;
@@ -662,7 +548,7 @@ namespace VirtualController
             // 上書き保存は初期状態では無効
             OverwriteSaveButton.Enabled = false;
             // 再生ボタンの有効化条件を変更
-            PlayMacroButton.Enabled = macroLoaded && controller != null && DisconnectButton.Enabled;
+            PlayMacroButton.Enabled = macroLoaded && controllerService.IsConnected && DisconnectButton.Enabled;
 
             DeleteMicroButton.Enabled = MacroListBox.SelectedItems.Count > 0;
 
@@ -701,10 +587,8 @@ namespace VirtualController
                 {
                     macroName = $"新規マクロ{idx}";
                     idx++;
-                } while (File.Exists(Path.Combine(macroFolder, macroName + ".csv")));
+                } while (macroManager.GetMacroNames().Contains(macroName)); // 変更
             }
-            string defaultPath = Path.Combine(macroFolder, macroName + ".csv");
-
             using (var sfd = new SaveFileDialog())
             {
                 sfd.InitialDirectory = macroFolder;
@@ -712,7 +596,7 @@ namespace VirtualController
                 sfd.Filter = "CSVファイル (*.csv)|*.csv";
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
-                    File.WriteAllText(sfd.FileName, MacroEditTextBox.Text, Encoding.UTF8);
+                    macroManager.SaveMacro(Path.GetFileNameWithoutExtension(sfd.FileName), MacroEditTextBox.Text); // 変更
                     LoadMacroList();
                     SaveAsButton.Enabled = false;
                 }
@@ -750,9 +634,10 @@ namespace VirtualController
                 string path = Path.Combine(macroFolder, editingMacroName + ".csv");
                 File.WriteAllText(path, MacroEditTextBox.Text, Encoding.UTF8);
                 lastLoadedMacroText = MacroEditTextBox.Text;
-                LoadMacroList(false); // 停止せず一覧更新
+                // MacroPlayer経由で再ロード
+                loadedMacro = MacroFrame.LoadMacroFile(path);
+                LoadMacroList(false);
                 OverwriteSaveButton.Enabled = false;
-
                 this.Invoke((Action)(() => {
                     MacroEditTextBox.SelectionLength = 0;
                     MacroEditTextBox.SelectionStart = MacroEditTextBox.TextLength;
@@ -857,6 +742,7 @@ namespace VirtualController
             SaveMacroSettings();
         }
 
+        // --- DebugMacroButton_Click 内のマクロデータ表示処理を MacroPlayer に統一 ---
         private void DebugMacroButton_Click(object sender, EventArgs e)
         {
             if (MacroListBox.SelectedItems.Count == 0)
@@ -868,8 +754,8 @@ namespace VirtualController
             string macroName = MacroListBox.SelectedItems[0] as string;
             if (string.IsNullOrEmpty(macroName)) return;
 
-            string path = Path.Combine(macroFolder, macroName + ".csv");
-            var frameArray = MacroFrame.ParseToFrameArray(path);
+            // MacroPlayerのParseToFrameArrayを利用
+            var frameArray = macroPlayer.ParseToFrameArray(macroName);
 
             var sb = new StringBuilder();
             sb.AppendLine($"マクロ名: {macroName}");
@@ -924,6 +810,7 @@ namespace VirtualController
             debugForm.ShowDialog();
         }
 
+        // 6. マクロ削除
         private void DeleteMicroButton_Click(object sender, EventArgs e)
         {
             if (MacroListBox.SelectedItems.Count == 0)
@@ -943,24 +830,15 @@ namespace VirtualController
 
             if (result == DialogResult.Yes)
             {
-                string path = Path.Combine(macroFolder, macroName + ".csv");
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                    LoadMacroList();
-                    // 選択状態が外れるので削除ボタンを無効化
-                    DeleteMicroButton.Enabled = false;
-                    // 削除されたマクロの内容をクリア
-                    MacroEditTextBox.Text = "";
-                    MacroNameLabel.Text = "";
-                    editingMacroName = null;
-                    lastLoadedMacroText = "";
-                    MessageBox.Show("マクロを削除しました。", "削除完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MessageBox.Show("ファイルが見つかりません。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                macroManager.DeleteMacro(macroName); // 変更
+                LoadMacroList();
+                DeleteMicroButton.Enabled = false;
+                // 削除されたマクロの内容をクリア
+                MacroEditTextBox.Text = "";
+                MacroNameLabel.Text = "";
+                editingMacroName = null;
+                lastLoadedMacroText = "";
+                MessageBox.Show("マクロを削除しました。", "削除完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -972,7 +850,7 @@ namespace VirtualController
             if (isMacroPlaying)
             {
                 macroCancelSource?.Cancel();
-                MacroFrame.AllOff(controller);
+                controllerService.AllOff(); // 変更
                 isMacroPlaying = false;
                 this.Invoke((Action)(() =>
                 {
