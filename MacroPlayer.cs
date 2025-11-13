@@ -97,6 +97,13 @@ namespace VirtualController
                             {
                                 string key = kv.Key.ToUpper();
                                 string val = kv.Value.ToUpper();
+                                // --- エイリアス対応 ---
+                                if (key == "LP") key = "X";
+                                else if (key == "LK") key = "A";
+                                else if (key == "MP") key = "Y";
+                                else if (key == "MK") key = "B";
+                                else if (key == "HP") key = "RB";
+                                else if (key == "HK") key = "LB";
                                 if (val == "ON")
                                     keyState.KeyStates[key] = true;
                                 else if (val == "OFF")
@@ -167,7 +174,14 @@ namespace VirtualController
             public Dictionary<string, bool> KeyStates = new Dictionary<string, bool>
             {
                 { "UP", false }, { "DOWN", false }, { "LEFT", false }, { "RIGHT", false },
-                { "A", false }, { "B", false }, { "X", false }, { "Y", false }, { "LB", false }, { "RB", false }
+                { "A", false }, { "B", false }, { "X", false }, { "Y", false }, { "LB", false }, { "RB", false },
+                // --- エイリアス追加 ---
+                { "LP", false }, // Xのエイリアス
+                { "LK", false }, // Aのエイリアス
+                { "MP", false }, // Yのエイリアス
+                { "MK", false }, // Bのエイリアス
+                { "HP", false }, // RBのエイリアス
+                { "HK", false }  // LBのエイリアス
             };
         }
 
@@ -182,11 +196,16 @@ namespace VirtualController
             {
                 var lines = File.ReadAllLines(path);
 
+                // --- コメント行（#から始まる行）を除去 ---
+                var filteredLines = lines
+                    .Where(line => !line.TrimStart().StartsWith("#"))
+                    .ToArray();
+
                 var frameCounts = new List<int>();
                 var frameKeys = new List<List<string>>();
                 int totalFrames = 0;
 
-                foreach (var line in lines)
+                foreach (var line in filteredLines)
                 {
                     var trimmed = line.Trim();
                     if (string.IsNullOrEmpty(trimmed))

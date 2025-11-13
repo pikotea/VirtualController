@@ -174,7 +174,7 @@
             this.XButton.Name = "XButton";
             this.XButton.Size = new System.Drawing.Size(131, 67);
             this.XButton.TabIndex = 12;
-            this.XButton.Text = "X";
+            this.XButton.Text = "X/LP";
             this.XButton.UseVisualStyleBackColor = true;
             this.XButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.XButton_MouseDown);
             this.XButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.XButton_MouseUp);
@@ -186,7 +186,7 @@
             this.RBButton.Name = "RBButton";
             this.RBButton.Size = new System.Drawing.Size(131, 67);
             this.RBButton.TabIndex = 11;
-            this.RBButton.Text = "RB";
+            this.RBButton.Text = "RB/HP";
             this.RBButton.UseVisualStyleBackColor = true;
             this.RBButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.RBButton_MouseDown);
             this.RBButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.RBButton_MouseUp);
@@ -198,7 +198,7 @@
             this.YButton.Name = "YButton";
             this.YButton.Size = new System.Drawing.Size(131, 67);
             this.YButton.TabIndex = 10;
-            this.YButton.Text = "Y";
+            this.YButton.Text = "Y/MP";
             this.YButton.UseVisualStyleBackColor = true;
             this.YButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.YButton_MouseDown);
             this.YButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.YButton_MouseUp);
@@ -210,7 +210,7 @@
             this.AButton.Name = "AButton";
             this.AButton.Size = new System.Drawing.Size(131, 67);
             this.AButton.TabIndex = 15;
-            this.AButton.Text = "A";
+            this.AButton.Text = "A/LK";
             this.AButton.UseVisualStyleBackColor = true;
             this.AButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.AButton_MouseDown);
             this.AButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.AButton_MouseUp);
@@ -222,7 +222,7 @@
             this.LBButton.Name = "LBButton";
             this.LBButton.Size = new System.Drawing.Size(131, 67);
             this.LBButton.TabIndex = 14;
-            this.LBButton.Text = "LB";
+            this.LBButton.Text = "LB/HK";
             this.LBButton.UseVisualStyleBackColor = true;
             this.LBButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.LBButton_MouseDown);
             this.LBButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.LBButton_MouseUp);
@@ -234,7 +234,7 @@
             this.BButton.Name = "BButton";
             this.BButton.Size = new System.Drawing.Size(131, 67);
             this.BButton.TabIndex = 13;
-            this.BButton.Text = "B";
+            this.BButton.Text = "B/MK";
             this.BButton.UseVisualStyleBackColor = true;
             this.BButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.BButton_MouseDown);
             this.BButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.BButton_MouseUp);
@@ -477,6 +477,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(1289, 1182);
             this.Controls.Add(this.OpenMacroFolderButton);
             this.Controls.Add(this.XAxisReverseCheckBox);
