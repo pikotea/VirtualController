@@ -73,19 +73,21 @@ Steam”Å‚Ìƒtƒ@ƒCƒRƒŒ“™‚ÌƒgƒŒƒ‚‹@”\‚ð•âŠ®‚·‚é‚½‚ß‚Éì¬‚µ‚Ü‚µ‚½BìŽÒ‚Íƒ”ƒ@ƒ“ƒpƒCƒ
 - •¡”ƒL[‚ÍƒJƒ“ƒ}‹æØ‚è
 - ƒL[‚ÍˆÈ‰º‚ÌŒ`Ž®‚ÅŽw’è‰Â”\i‘å•¶ŽšE¬•¶Žš‹æ•Ê‚È‚µj
   - ƒ{ƒ^ƒ“: A, B, X, Y, LB, RB
+  - ƒ{ƒ^ƒ“: LP, LK, MP, MK, HP, HK‚Å‚à‰Â‚Å‚·iA=LP, B=MP, X=HP, Y=LK, RB=MK, LB=HKj
   - •ûŒü: UP, DOWN, LEFT, RIGHT
 - ‘Ò‚¿ƒtƒŒ[ƒ€‚ÍƒL[‚ð‘‚©‚È‚¯‚ê‚ÎOK
   —á: `5:` i5ƒtƒŒ[ƒ€‘Ò‹@j
+- `#`‚©‚çŽn‚Ü‚és‚ÍƒRƒƒ“ƒg‚Æ‚µ‚Ä–³Ž‹‚³‚ê‚Ü‚·is––ƒRƒƒ“ƒg‚Í”ñ‘Î‰ž‚Å‚·j
 - ƒQ[ƒ€“à‚ÌƒtƒŒ[ƒ€‚Æ“¯Šú‚µ‚Ä‚¢‚é‚í‚¯‚Å‚Í‚È‚¢‚Ì‚ÅA1ƒtƒŒ[ƒ€‚Å’è‹`‚·‚é‚Æ”FŽ¯‚³‚ê‚È‚¢ê‡‚ª‚ ‚é‚Ì‚ÅA2ƒtƒŒ[ƒ€ˆÈã‚ÅŽw’è‚·‚é‚±‚Æ‚ð„§‚µ‚Ü‚·B
 - Œ»ó‚Íƒ}ƒNƒ‚Ìì¬‚Í”ñí‚É–Ê“|‚Å‚·B‘OŒã1ƒtƒŒ[ƒ€‚¸‚ê‚é‚±‚Æ‚ðˆÓŽ¯‚µ‚Â‚ÂA‚¤‚Ü‚­“®‚­‚©‚Ç‚¤‚©ŽŽsöŒë‚µ‚Ä‚­‚¾‚³‚¢iƒtƒŒ[ƒ€‚Ì’mŽ¯‚à•K—v‚Å‚·jB
 
 
 —ájƒTƒXƒJƒbƒ`‚Ì‘å‘«‚Åƒ_ƒEƒ“‚³‚¹‚Ä‹N‚«ã‚ª‚è‚É“Š‚°‚ð‚·‚éƒ}ƒNƒiƒLƒƒƒ‰‚²‚Æ‚É‹N‚«ã‚ª‚èƒXƒs[ƒh‚ªˆá‚¤‚Ì‚Å‘Ò‚¿ƒtƒŒ[ƒ€‚Í’²®‚·‚é•K—v‚ª‚ ‚è‚Ü‚·B—á‚ÍƒUƒxƒ‹‘ŠŽèj
 ```
-2: Down, LB
+2: Down, HK
 70: Left
 13:
-2: Left, RB
+2: Left, HP
 ```
 
 ---
