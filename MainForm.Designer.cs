@@ -340,7 +340,7 @@
             this.FrameMsTextBox.Name = "FrameMsTextBox";
             this.FrameMsTextBox.Size = new System.Drawing.Size(71, 34);
             this.FrameMsTextBox.TabIndex = 27;
-            this.FrameMsTextBox.Text = "16.666";
+            this.FrameMsTextBox.Text = "16.6";
             this.FrameMsTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.FrameMsTextBox.TextChanged += new System.EventHandler(this.FrameMsTextBox_TextChanged);
             // 
@@ -460,7 +460,7 @@
             this.XAxisReverseCheckBox.TabIndex = 38;
             this.XAxisReverseCheckBox.Text = "左右反転";
             this.XAxisReverseCheckBox.UseVisualStyleBackColor = true;
-            this.XAxisReverseCheckBox.CheckedChanged += new System.EventHandler(this.XAxisReverseCheckBox_CheckedChanged);  
+            this.XAxisReverseCheckBox.CheckedChanged += new System.EventHandler(this.XAxisReverseCheckBox_CheckedChanged);
             // 
             // OpenMacroFolderButton
             // 
@@ -473,7 +473,7 @@
             this.OpenMacroFolderButton.UseVisualStyleBackColor = true;
             this.OpenMacroFolderButton.Click += new System.EventHandler(this.OpenMacroFolderButton_Click);
             // 
-            // Form1
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -515,7 +515,7 @@
             this.Controls.Add(this.UpButton);
             this.Controls.Add(this.DisconnectButton);
             this.Controls.Add(this.ConnectButton);
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.Text = "仮想コマンドコントローラー";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);

@@ -125,11 +125,13 @@ namespace VirtualController
             var token = macroCancelSource.Token;
 
             double frameMs = 1000 / 60;
+            double.TryParse(FrameMsTextBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out frameMs);
+
             int playWaitFrames = 0;
+            int.TryParse(PlayWaitTextBox.Text, out playWaitFrames);
             bool isRepeat = RepeatCheckBox.Checked;
             bool isRandom = RandomCheckBox.Checked;
-            double.TryParse(FrameMsTextBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out frameMs);
-            int.TryParse(PlayWaitTextBox.Text, out playWaitFrames);
+
 
             // 選択マクロ名リスト
             var macroNames = MacroListBox.SelectedItems.Cast<string>().ToList();
