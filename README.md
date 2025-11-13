@@ -39,8 +39,8 @@ Steam”Å‚Ìƒtƒ@ƒCƒRƒŒ“™‚ÌƒgƒŒƒ‚‹@”\‚ğ•âŠ®‚·‚é‚½‚ß‚Éì¬‚µ‚Ü‚µ‚½BìÒ‚Íƒ”ƒ@ƒ“ƒpƒCƒ
 
 1. [ViGEmBus](https://github.com/nefarius/ViGEmBus/releases/tag/v1.21.442.0)ƒhƒ‰ƒCƒo‚ğƒCƒ“ƒXƒg[ƒ‹‚µ‚Ä‚­‚¾‚³‚¢B
 `ViGEmBus_1.21.442_x64_x86_arm64.exe` ‚ğƒ_ƒEƒ“ƒ[ƒh‚µ‚ÄƒCƒ“ƒXƒg[ƒ‰[‚ğÀs‚µ‚Ü‚·B
-2. ‰¼‘zƒRƒ}ƒ“ƒhƒRƒ“ƒgƒ[ƒ‰[‚ğ[‚±‚¿‚ç]()‚©‚çƒ_ƒEƒ“ƒ[ƒh‚µ‚Ä‰ğ“€‚µ‚Ü‚·Bi‚ ‚Æ‚Å’Ç‹Lj
-3. ‰ğ“€‚µ‚½ƒtƒHƒ‹ƒ_“à‚Ì `VirtualCommandController.exe` ‚ğÀs‚µ‚Ü‚·B
+2. ‰¼‘zƒRƒ}ƒ“ƒhƒRƒ“ƒgƒ[ƒ‰[‚ğ[‚±‚¿‚ç](https://github.com/pikotea/VirtualController/releases/tag/v0.1)‚©‚çƒ_ƒEƒ“ƒ[ƒh‚µ‚Ä‰ğ“€‚µ‚Ü‚·Bi‚ ‚Æ‚Å’Ç‹Lj
+3. ‰ğ“€‚µ‚½ƒtƒHƒ‹ƒ_“à‚Ì `VirtualController.exe` ‚ğÀs‚µ‚Ü‚·B
 
 ---
 
