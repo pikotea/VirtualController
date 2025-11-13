@@ -1,88 +1,88 @@
-# ���z�R�}���h�R���g���[���[
+# 仮想コマンドコントローラー
 
-## �T�v
-���z�R�}���h�R���g���[���[�́APC��ŉ��zXbox 360�R���g���[���[�𑀍삵�A�}�N���Đ���{�^�����͂��������ł���Windows�A�v���P�[�V�����ł��B
+## 概要
+仮想コマンドコントローラーは、PC上で仮想Xbox 360コントローラーを操作し、マクロ再生やボタン入力を自動化できるWindowsアプリケーションです。
 
-Steam�ł̃t�@�C�R�����̃g�����@�\��⊮���邽�߂ɍ쐬���܂����B��҂̓��@���p�C�A�Z�C���@�[�ŗ��p���Ă��܂����A���̃Q�[���ɂ����p�͉\���Ǝv���܂��B
+Steam版のファイコレ等のトレモ機能を補完するために作成しました。作者はヴァンパイアセイヴァーで利用していますが、他のゲームにも応用は可能かと思います。
 
-�������A�����p�ɍ쐬�������̂Ȃ̂ł��܂�ׂ����T�|�[�g��Ή��͊��҂��Ȃ��ł��������B�����g�Ŏ����Ă݂āA�g������ɗ��p�𐄏����܂��B
-
----
-
-## ���p����
-
-���@���p�C�A�Z�C���@�[�����܂��傤�i�����j
+ただし、自分用に作成したものなのであまり細かいサポートや対応は期待しないでください。ご自身で試してみて、使える方に利用を推奨します。
 
 ---
 
-## ��ȋ@�\
+## 利用条件
 
-- �}�N���t�@�C���ɂ��R���g���[���[����̎����Đ�
-- �}�N���ҏW�E�ۑ��E�폜
-- �����}�N���̊Ǘ��E�I��
-- �R���g���[���[�̐ڑ��E�ؒf
-- UI����̎蓮�{�^���E�X�e�B�b�N����
-- �}�N���Đ����̌J��Ԃ��E�����_���Đ��E�ҋ@�t���[���w��
-- �ݒ�̕ۑ��E�����i�t���[�����x�A�ҋ@�A�I���}�N�����j
+ヴァンパイアセイヴァーをやりましょう（推奨）
 
 ---
 
-## �K�v��
+## 主な機能
+
+- マクロファイルによるコントローラー操作の自動再生
+- マクロ編集・保存・削除
+- 複数マクロの管理・選択
+- コントローラーの接続・切断
+- UIからの手動ボタン・スティック操作
+- マクロ再生時の繰り返し・ランダム再生・待機フレーム指定
+- 設定の保存・復元（フレーム速度、待機、選択マクロ等）
+
+---
+
+## 必要環境
 
 - Windows 10/11
-- .NET Framework 4.8�iWindows�Ƀf�t�H���g�ŃC���X�g�[������Ă���j
-- [ViGEmBus](https://github.com/nefarius/ViGEmBus/releases/tag/v1.21.442.0) �h���C�o�i���z�R���g���[���[�p�j
+- .NET Framework 4.8（Windowsにデフォルトでインストールされている）
+- [ViGEmBus](https://github.com/nefarius/ViGEmBus/releases/tag/v1.21.442.0) ドライバ（仮想コントローラー用）
 
 ---
 
-## �C���X�g�[�����@
+## インストール方法
 
-1. [ViGEmBus](https://github.com/nefarius/ViGEmBus/releases/tag/v1.21.442.0)�h���C�o���C���X�g�[�����Ă��������B
-`ViGEmBus_1.21.442_x64_x86_arm64.exe` ���_�E�����[�h���ăC���X�g�[���[�����s���܂��B
-2. ���z�R�}���h�R���g���[���[��[������](https://github.com/pikotea/VirtualController/releases/latest)����_�E�����[�h���ĉ𓀂��܂��B�i���ƂŒǋL�j
-3. �𓀂����t�H���_���� `VirtualController.exe` �����s���܂��B
-
----
-
-## �g����
-
-1. �Q�[�����g���[�j���O���[�h�ŋN�����A�uDUMMY OPTION�v�ɂāu�A�N�V�����v���uPLAYER����v�ɂ��܂��B
-<img src="docs/images/setting_01_action.png" alt="�A�N�V����" width="400">
-
-2. ���z�R�}���h�R���g���[���[���ړ����A�u�ڑ��v�{�^���������ĉ��z�R���g���[���[��ڑ����܂��B
-<img src="docs/images/setting_02_connect.png" alt="�ڑ�" width="400">
-
-3. ��ʏ㕔�̃R���g���[���[UI�ŁA�{�^��������L�[�Ȃǂ𑀍삷��ƃQ�[�����Ő���ɐڑ����ꂽ�A�i�E���X���o�܂��B
-<img src="docs/images/setting_03_connect2.png" alt="�ڑ�2" width="400">
-
-4. ��ʏ㕔�̃R���g���[���[UI�ŁA�uBACK�v�{�^���������āuCONTROLLER SETTINGS�v���J���{�^�������蓖�ĂĂ��������B
-<img src="docs/images/setting_04_key.png" alt="�{�^���ݒ�" width="400">
-���R���g���[���[UI�ʂ�ɐݒ肷��Ƃ킩��₷���Ǝv���܂��iLT�ART�{�^���͎g���܂���j
-
-
-5. ���Ƃ͓K���Ƀ}�N���t�@�C�����쐬���A�}�N����I�����āu�Đ��v�{�^���������ƃ}�N�������s����܂��B�����_���Đ��������ꍇ�͕����I�����A�u�����_���v�Ƀ`�F�b�N�����āu�Đ��v
-�{�^���������Ă��������B
-<img src="docs/images/setting_05_play.png" alt="�Đ�" width="400">
+1. [ViGEmBus](https://github.com/nefarius/ViGEmBus/releases/tag/v1.21.442.0)ドライバをインストールしてください。
+`ViGEmBus_1.21.442_x64_x86_arm64.exe` をダウンロードしてインストーラーを実行します。
+2. 仮想コマンドコントローラーを[こちら](https://github.com/pikotea/VirtualController/releases/latest)からダウンロードして解凍します。
+3. 解凍したフォルダ内の `VirtualController.exe` を実行します。
 
 ---
 
-## �}�N���t�@�C���d�l
+## 使い方
 
-- 1�s���ƂɃt���[�����Ƒ���L�[���L�q  
-  ��: `3:UP,A` �i3�t���[��UP��A�{�^��ON�j
-- �����L�[�̓J���}��؂�
-- �L�[�͈ȉ��̌`���Ŏw��\�i�啶���E��������ʂȂ��j
-  - �{�^��: A, B, X, Y, LB, RB
-  - �{�^��: LP, LK, MP, MK, HP, HK�ł��ł��iA=LP, B=MP, X=HP, Y=LK, RB=MK, LB=HK�j
-  - ����: UP, DOWN, LEFT, RIGHT
-- �҂��t���[���̓L�[�������Ȃ����OK
-  ��: `5:` �i5�t���[���ҋ@�j
-- `#`����n�܂�s�̓R�����g�Ƃ��Ė�������܂��i�s���R�����g�͔�Ή��ł��j
-- �Q�[�����̃t���[���Ɠ������Ă���킯�ł͂Ȃ��̂ŁA1�t���[���Œ�`����ƔF������Ȃ��ꍇ������̂ŁA2�t���[���ȏ�Ŏw�肷�邱�Ƃ𐄏����܂��B
-- ����̓}�N���̍쐬�͔��ɖʓ|�ł��B�O��1�t���[������邱�Ƃ��ӎ����A���܂��������ǂ������s���낵�Ă��������i�t���[���̒m�����K�v�ł��j�B
+1. ゲームをトレーニングモードで起動し、「DUMMY OPTION」にて「アクション」を「PLAYER操作」にします。
+<img src="docs/images/setting_01_action.png" alt="アクション" width="400">
+
+2. 仮想コマンドコントローラーを移動し、「接続」ボタンを押して仮想コントローラーを接続します。
+<img src="docs/images/setting_02_connect.png" alt="接続" width="400">
+
+3. 画面上部のコントローラーUIで、ボタンや方向キーなどを操作するとゲーム内で正常に接続されたアナウンスが出ます。
+<img src="docs/images/setting_03_connect2.png" alt="接続2" width="400">
+
+4. 画面上部のコントローラーUIで、「BACK」ボタンを押して「CONTROLLER SETTINGS」を開きボタンを割り当ててください。
+<img src="docs/images/setting_04_key.png" alt="ボタン設定" width="400">
+※コントローラーUI通りに設定するとわかりやすいと思います（LT、RTボタンは使えません）
 
 
-��j�T�X�J�b�`�̑呫�Ń_�E�������ċN���オ��ɓ���������}�N���i�L�������ƂɋN���オ��X�s�[�h���Ⴄ�̂ő҂��t���[���͒�������K�v������܂��B��̓U�x������j
+5. あとは適当にマクロファイルを作成し、マクロを選択して「再生」ボタンを押すとマクロが実行されます。ランダム再生したい場合は複数選択し、「ランダム」にチェックを入れて「再生」
+ボタンを教えてください。
+<img src="docs/images/setting_05_play.png" alt="再生" width="400">
+
+---
+
+## マクロファイル仕様
+
+- 1行ごとにフレーム数と操作キーを記述  
+  例: `3:UP,A` （3フレームUPとAボタンON）
+- 複数キーはカンマ区切り
+- キーは以下の形式で指定可能（大文字・小文字区別なし）
+  - ボタン: A, B, X, Y, LB, RB
+  - ボタン: LP, LK, MP, MK, HP, HKでも可です（A=LP, B=MP, X=HP, Y=LK, RB=MK, LB=HK）
+  - 方向: UP, DOWN, LEFT, RIGHT
+- 待ちフレームはキーを書かなければOK
+  例: `5:` （5フレーム待機）
+- `#`から始まる行はコメントとして無視されます（行末コメントは非対応です）
+- ゲーム内のフレームと同期しているわけではないので、1フレームで定義すると認識されない場合があるので、2フレーム以上で指定することを推奨します。
+- 現状はマクロの作成は非常に面倒です。前後1フレームずれることを意識しつつ、うまく動くかどうか試行錯誤してください（フレームの知識も必要です）。
+
+
+例）サスカッチの大足でダウンさせて起き上がりに投げをするマクロ（キャラごとに起き上がりスピードが違うので待ちフレームは調整する必要があります。例はザベル相手）
 ```
 2: Down, HK
 70: Left
@@ -94,42 +94,42 @@ Steam�ł̃t�@�C�R�����̃g�����@�\��⊮���邽�߂ɍ쐬���܂����B��҂̓��@���p�C�
 
 ## FAQ
 
-- Q: ���z�R�}���h�R���g���[���[��G��ƃQ�[������A�N�e�B�u�ɂȂ��đ���ł��Ȃ��̂ł����H
-  A: Steam���͂��L���ɂȂ��Ă���\��������܂��BSteam��̃Q�[����ʂŁu�v���C�v�{�^���̉E�[�ɂŃR���g���[���[�̃{�^��������̂ŁA������Steam���͂𖳌��ɂ��Ă��������B
-- Q: �}�N���t�@�C�����R�s�[�������̂ł����H
-  A: �ҏW���̃}�N���𖼑O��t���ĕۑ�����ƃR�s�[���ł��܂��B��ʂ̃R�s�[����肽���ꍇ�́A�G�N�X�v���[���[�� `macros` �t�H���_���̃t�@�C�����R�s�[���Ă��������B
-- Q: �����ƃ}�N���ʂ�ɓ����Ă��邩�m�F�������̂ł����H
-  A: ���z�R�}���h�R���g���[���[����1P�Őڑ����ăQ�[�����J�n����΃L�[���O���łē���m�F�ł��܂��B����R���{�Ȃ񂩂�����͂��Ȃ̂ł��������������B
+- Q: 仮想コマンドコントローラーを触るとゲームが非アクティブになって操作できないのですが？
+  A: Steam入力が有効になっている可能性があります。Steam上のゲーム画面で「プレイ」ボタンの右端にでコントローラーのボタンがあるので、そこでSteam入力を無効にしてください。
+- Q: マクロファイルをコピーしたいのですが？
+  A: 編集中のマクロを名前を付けて保存するとコピーができます。大量のコピーを作りたい場合は、エクスプローラーで `macros` フォルダ内のファイルをコピーしてください。
+- Q: ちゃんとマクロ通りに動いているか確認したいのですが？
+  A: 仮想コマンドコントローラーから1Pで接続してゲームを開始すればキーログもでて動作確認できます。難しいコンボなんかも作れるはずなのでお試しください。
 
-## ���m�̖��
+## 既知の問題
 
-- �}�N����ҏW��ɕۑ������ɍĐ��{�^���������ƁA�����ŏ㏑���ۑ������ł����A�Đ����~�܂��Ă��܂��̂ł��̂܂܂������Đ��{�^���������Ă��������B
-- �e��{�^���̗L���A���������������f����Ȃ��\��������܂��B
+- マクロを編集後に保存せずに再生ボタンを押すと、自動で上書き保存するんですが、再生が止まってしまうのでそのままもう一回再生ボタンを押してください。
+- 各種ボタンの有効、無効が正しく反映されない可能性があります。
 
-## ���ӎ���
+## 注意事項
 
-- �Q�[����A�v���ɂ���Ă͉��z�R���g���[���[���͂��F������Ȃ��ꍇ������܂��B
-- ViGEmBus�h���C�o���������C���X�g�[������Ă��Ȃ��Ɠ��삵�܂���B
-- �h���C�o�̋Z�p��̐����LS, RS�{�^���͗��p�ł��܂���B
-
----
-
-## ���C�Z���X
-
-�{�\�t�g�E�F�A��MIT���C�Z���X�ł��B  
-ViGEmBus�iBSD-3-Clause���C�Z���X�j�𗘗p���Ă��܂��B  
-�ڍׂ�LICENSE�t�@�C�����Q�Ƃ��Ă��������B
+- ゲームやアプリによっては仮想コントローラー入力が認識されない場合があります。
+- ViGEmBusドライバが正しくインストールされていないと動作しません。
+- ドライバの技術上の制約でLS, RSボタンは利用できません。
 
 ---
 
-## ����̗\��i�C������������܂��B���Ȃ��\��������j
+## ライセンス
 
-- �}�N���̋L�^�@�\
-- ����̋N���オ��s�����w�肷�邽�߂̃g���K�[�@�\�i����̃{�^�����g���K�[�ɂ��ă}�N���Đ��j
-- ���͂̐��m�����v������@�\�iAG���͂������������A�t���[���œ��͂ł��Ă��邩�Ȃǂ��v��j
+本ソフトウェアはMITライセンスです。  
+ViGEmBus（BSD-3-Clauseライセンス）を利用しています。  
+詳細はLICENSEファイルを参照してください。
 
 ---
 
-## ���
+## 今後の予定（気が向いたらやります。やらない可能性もあり）
 
-�f�J������ [@dekameron999](https://x.com/dekamelon999)
+- マクロの記録機能
+- 相手の起き上がり行動を指定するためのトリガー機能（特定のボタンをトリガーにしてマクロ再生）
+- 入力の正確性を計測する機能（AG入力が正しい順序、フレームで入力できているかなどを計る）
+
+---
+
+## 作者
+
+デカメロン [@dekameron999](https://x.com/dekamelon999)
