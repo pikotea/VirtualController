@@ -96,6 +96,8 @@ Steam”Å‚Ìƒtƒ@ƒCƒRƒŒ“™‚ÌƒgƒŒƒ‚‹@”\‚ð•âŠ®‚·‚é‚½‚ß‚Éì¬‚µ‚Ü‚µ‚½BìŽÒ‚Íƒ”ƒ@ƒ“ƒpƒCƒ
   A: Steam“ü—Í‚ª—LŒø‚É‚È‚Á‚Ä‚¢‚é‰Â”\«‚ª‚ ‚è‚Ü‚·BSteamã‚ÌƒQ[ƒ€‰æ–Ê‚ÅuƒvƒŒƒCvƒ{ƒ^ƒ“‚Ì‰E’[‚É‚ÅƒRƒ“ƒgƒ[ƒ‰[‚Ìƒ{ƒ^ƒ“‚ª‚ ‚é‚Ì‚ÅA‚»‚±‚ÅSteam“ü—Í‚ð–³Œø‚É‚µ‚Ä‚­‚¾‚³‚¢B
 - Q: ƒ}ƒNƒƒtƒ@ƒCƒ‹‚ðƒRƒs[‚µ‚½‚¢‚Ì‚Å‚·‚ªH
   A: •ÒW’†‚Ìƒ}ƒNƒ‚ð–¼‘O‚ð•t‚¯‚Ä•Û‘¶‚·‚é‚ÆƒRƒs[‚ª‚Å‚«‚Ü‚·B‘å—Ê‚ÌƒRƒs[‚ðì‚è‚½‚¢ê‡‚ÍAƒGƒNƒXƒvƒ[ƒ‰[‚Å `macros` ƒtƒHƒ‹ƒ_“à‚Ìƒtƒ@ƒCƒ‹‚ðƒRƒs[‚µ‚Ä‚­‚¾‚³‚¢B
+- Q: ‚¿‚á‚ñ‚Æƒ}ƒNƒ’Ê‚è‚É“®‚¢‚Ä‚¢‚é‚©Šm”F‚µ‚½‚¢‚Ì‚Å‚·‚ªH
+  A: ‰¼‘zƒRƒ}ƒ“ƒhƒRƒ“ƒgƒ[ƒ‰[‚©‚ç1P‚ÅÚ‘±‚µ‚ÄƒQ[ƒ€‚ðŠJŽn‚·‚ê‚ÎƒL[ƒƒO‚à‚Å‚Ä“®ìŠm”F‚Å‚«‚Ü‚·B“ï‚µ‚¢ƒRƒ“ƒ{‚È‚ñ‚©‚àì‚ê‚é‚Í‚¸‚È‚Ì‚Å‚¨ŽŽ‚µ‚­‚¾‚³‚¢B
 
 ## Šù’m‚Ì–â‘è
 
