@@ -32,10 +32,14 @@ namespace VirtualController
         private const string ConfigFilePath = "RecordSettingsConfig.json";
 
         // 変更後: private class RecordSettingsConfig
+        [DataContract]
         public class RecordSettingsConfig
         {
+            [DataMember]
             public Guid ControllerGuid;
+            [DataMember]
             public Dictionary<string, int?> ButtonIndices = new Dictionary<string, int?>();
+            [DataMember]
             public Dictionary<string, int?> ZValues = new Dictionary<string, int?>();
         }
 
@@ -45,8 +49,6 @@ namespace VirtualController
             SetActionButtonsEnabled(false);
             OKButton.Enabled = false;
             LoadPhysicalControllers();
-            ControllerComboBox.SelectedIndexChanged += ControllerComboBox_SelectedIndexChanged;
-            OKButton.Click += OKButton_Click;
             LoadConfig(); // 追加: 設定ファイルから復元
         }
 
@@ -104,7 +106,7 @@ namespace VirtualController
             LogTextBox.AppendText($"[{DateTime.Now:HH:mm:ss}] コントローラー「{device.InstanceName}」に接続しました。\r\n");
 
             var timer = new Timer();
-            timer.Interval = 100;
+            timer.Interval = 1000 / 60 * 2; // 2フレームに1回
             timer.Tick += (s, ev) =>
             {
                 try
@@ -212,8 +214,12 @@ namespace VirtualController
                     {
                         assignedButtonIndices[kvp.Key] = null;
                         assignedZValues[kvp.Key] = null;
-                        // ラベルも未割り当て表示に
-                        var label = Controls.OfType<Label>().FirstOrDefault(l => l.Name == kvp.Key.Name.Replace("Button", "Label"));
+                        Control labelParent;
+                        if (kvp.Key == F1Button)
+                            labelParent = OptionGroupBox;
+                        else
+                            labelParent = this;
+                        var label = labelParent.Controls.OfType<Label>().FirstOrDefault(l => l.Name == kvp.Key.Name.Replace("Button", "Label"));
                         if (label != null) label.Text = "未割り当て";
                     }
                 }
@@ -227,7 +233,12 @@ namespace VirtualController
                     {
                         assignedButtonIndices[kvp.Key] = null;
                         assignedZValues[kvp.Key] = null;
-                        var label = Controls.OfType<Label>().FirstOrDefault(l => l.Name == kvp.Key.Name.Replace("Button", "Label"));
+                        Control labelParent;
+                        if (kvp.Key == F1Button)
+                            labelParent = OptionGroupBox;
+                        else
+                            labelParent = this;
+                        var label = labelParent.Controls.OfType<Label>().FirstOrDefault(l => l.Name == kvp.Key.Name.Replace("Button", "Label"));
                         if (label != null) label.Text = "未割り当て";
                     }
                 }
@@ -236,7 +247,14 @@ namespace VirtualController
             if (listeningButton != null)
             {
                 listeningButton.BackColor = SystemColors.Control;
-                listeningLabel.Text = displayText;
+                Control labelParent;
+                if (listeningButton == F1Button)
+                    labelParent = OptionGroupBox;
+                else
+                    labelParent = this;
+                var label = labelParent.Controls.OfType<Label>().FirstOrDefault(l => l.Name == listeningButton.Name.Replace("Button", "Label"));
+                if (label != null)
+                    label.Text = displayText;
                 assignedButtonIndices[listeningButton] = buttonIndex;
                 assignedZValues[listeningButton] = zValue;
             }
@@ -307,7 +325,10 @@ namespace VirtualController
             RecordSettingsConfig config;
             using (var fs = new FileStream(ConfigFilePath, FileMode.Open))
             {
-                var serializer = new DataContractJsonSerializer(typeof(RecordSettingsConfig));
+                var serializer = new DataContractJsonSerializer(
+                    typeof(RecordSettingsConfig),
+                    new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true }
+                );
                 config = (RecordSettingsConfig)serializer.ReadObject(fs);
             }
 
@@ -325,7 +346,15 @@ namespace VirtualController
             {
                 assignedButtonIndices[btn] = config.ButtonIndices.ContainsKey(btn.Name) ? config.ButtonIndices[btn.Name] : null;
                 assignedZValues[btn] = config.ZValues.ContainsKey(btn.Name) ? config.ZValues[btn.Name] : null;
-                var label = Controls.OfType<Label>().FirstOrDefault(l => l.Name == btn.Name.Replace("Button", "Label"));
+
+                System.Diagnostics.Debug.WriteLine(
+                    $"ボタン: {btn.Name}, ButtonIndex: {assignedButtonIndices[btn]}, ZValue: {assignedZValues[btn]}"
+                );
+
+                Control labelParent = btn == F1Button ? (Control)OptionGroupBox : (Control)this;
+                var labelName = btn.Name.Replace("Button", "Label");
+                var label = labelParent.Controls.OfType<Label>().FirstOrDefault(l => l.Name == labelName);
+
                 if (label != null)
                 {
                     if (assignedButtonIndices[btn] != null)

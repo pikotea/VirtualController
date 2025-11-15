@@ -1,4 +1,5 @@
 using Nefarius.ViGEm.Client.Targets.Xbox360;
+using Nefarius.ViGEm.Client; // IXbox360Controller の定義元
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -166,6 +167,215 @@ namespace VirtualController
                     // UIスレッドでInvokeする必要がある場合は呼び出し元で対応
                 }
             }, token);
+        }
+
+        // PlayAsyncの引数にジョイスティックと設定を追加
+        public async Task PlayAsync(
+            List<string> macroNames,
+            double frameMs,
+            int playWaitFrames,
+            bool isRepeat,
+            bool isRandom,
+            bool xAxisReverse,
+            int frame,
+            CancellationToken token,
+            SharpDX.DirectInput.Joystick joystick = null,
+            RecordSettingsForm.RecordSettingsConfig recordConfig = null)
+        {
+            var macroTriggers = new List<(string macroName, List<string> triggers, List<string> waitActions)>();
+            foreach (var macroName in macroNames)
+            {
+                var macroText = File.ReadAllText(Path.Combine(macroFolder, macroName + ".csv"));
+                var lines = macroText.Split('\n');
+                var triggers = new List<string>();
+                var waitActions = new List<string>();
+                foreach (var line in lines)
+                {
+                    var trimmed = line.Trim();
+                    if (trimmed.StartsWith("#TRIGGER:"))
+                    {
+                        triggers = trimmed.Substring("#TRIGGER:".Length)
+                            .Split(',')
+                            .Select(x =>
+                            {
+                                var key = x.Trim().ToUpper();
+                                if (xAxisReverse)
+                                {
+                                    if (key == "LEFT") key = "RIGHT";
+                                    else if (key == "RIGHT") key = "LEFT";
+                                }
+                                return key;
+                            })
+                            .Where(x => !string.IsNullOrEmpty(x))
+                            .ToList();
+                    }
+                    if (trimmed.StartsWith("#TRIGGERWAIT:"))
+                    {
+                        waitActions = trimmed.Substring("#TRIGGERWAIT:".Length)
+                            .Split(',')
+                            .Select(x =>
+                            {
+                                var key = x.Trim().ToUpper();
+                                if (xAxisReverse)
+                                {
+                                    if (key == "LEFT") key = "RIGHT";
+                                    else if (key == "RIGHT") key = "LEFT";
+                                }
+                                return key;
+                            })
+                            .Where(x => !string.IsNullOrEmpty(x))
+                            .ToList();
+                    }
+                    if (!trimmed.StartsWith("#") && (trimmed.Contains(":") || (trimmed.Length > 0 && !trimmed.StartsWith("#"))))
+                        break;
+                }
+                macroTriggers.Add((macroName, triggers, waitActions));
+            }
+
+            var triggerMacros = macroTriggers.Where(mt => mt.triggers.Count > 0).ToList();
+            // デバッグ出力追加
+            System.Diagnostics.Debug.WriteLine("[MacroPlayer] triggerMacros:");
+            foreach (var mt in triggerMacros)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"  macroName={mt.macroName}, triggers=[{string.Join(",", mt.triggers)}], waitActions=[{string.Join(",", mt.waitActions)}]"
+                );
+            }
+            System.Diagnostics.Debug.WriteLine($"[MacroPlayer] joystick: {(joystick == null ? "null" : joystick.ToString())}");
+            System.Diagnostics.Debug.WriteLine($"[MacroPlayer] recordConfig: {(recordConfig == null ? "null" : $"ControllerGuid={recordConfig.ControllerGuid}, ButtonIndices={string.Join(",", recordConfig.ButtonIndices.Select(kv => kv.Key + "=" + (kv.Value?.ToString() ?? "null")))} ZValues={string.Join(",", recordConfig.ZValues.Select(kv => kv.Key + "=" + (kv.Value?.ToString() ?? "null")))}")}");
+
+            // 判定部分
+            if (triggerMacros.Count == 0 || joystick == null || recordConfig == null)
+            {
+                System.Diagnostics.Debug.WriteLine("[MacroPlayer] PlayAsync(基本) 実行");
+                await PlayAsync(
+                    macroNames,
+                    frameMs,
+                    playWaitFrames,
+                    isRepeat,
+                    isRandom,
+                    xAxisReverse,
+                    frame,
+                    token
+                );
+                return;
+            }
+
+            // すべてのTRIGGERWAIT定義から最初のボタン群を抽出
+            List<string> prioritizedWaitActions = null;
+            foreach (var mt in triggerMacros)
+            {
+                if (mt.waitActions.Count > 0)
+                {
+                    prioritizedWaitActions = mt.waitActions;
+                    break;
+                }
+            }
+
+
+            // ジョイスティック判定
+            Random rand = new Random();
+            while (!token.IsCancellationRequested)
+            {
+                // トリガー待ちの間は prioritizedWaitActions のボタンを押す
+                if (prioritizedWaitActions != null && prioritizedWaitActions.Count > 0)
+                {
+                    var keyState = new MacroKeyState();
+                    foreach (var kv in prioritizedWaitActions)
+                    {
+                        string key = kv.ToUpper();
+                        // --- エイリアス対応 ---
+                        if (key == "LP") key = "X";
+                        else if (key == "LK") key = "A";
+                        else if (key == "MP") key = "Y";
+                        else if (key == "MK") key = "B";
+                        else if (key == "HP") key = "RB";
+                        else if (key == "HK") key = "LB";
+                        keyState.KeyStates[key] = true;
+                    }
+
+                    short y = 0, x = 0;
+                    if (keyState.KeyStates["UP"] && !keyState.KeyStates["DOWN"]) y = short.MaxValue;
+                    else if (keyState.KeyStates["DOWN"] && !keyState.KeyStates["UP"]) y = short.MinValue;
+
+                    bool reverse = xAxisReverse;
+                    if (!reverse)
+                    {
+                        if (keyState.KeyStates["LEFT"] && !keyState.KeyStates["RIGHT"]) x = short.MinValue;
+                        else if (keyState.KeyStates["RIGHT"] && !keyState.KeyStates["LEFT"]) x = short.MaxValue;
+                    }
+                    else
+                    {
+                        if (keyState.KeyStates["LEFT"] && !keyState.KeyStates["RIGHT"]) x = short.MaxValue;
+                        else if (keyState.KeyStates["RIGHT"] && !keyState.KeyStates["LEFT"]) x = short.MinValue;
+                    }
+
+                    // 軸・ボタンを直接コントローラーに反映
+                    controllerService.Controller.SetAxisValue(Xbox360Axis.LeftThumbY, y);
+                    controllerService.Controller.SetAxisValue(Xbox360Axis.LeftThumbX, x);
+
+                    controllerService.Controller.SetButtonState(Xbox360Button.A, keyState.KeyStates["A"]);
+                    controllerService.Controller.SetButtonState(Xbox360Button.B, keyState.KeyStates["B"]);
+                    controllerService.Controller.SetButtonState(Xbox360Button.X, keyState.KeyStates["X"]);
+                    controllerService.Controller.SetButtonState(Xbox360Button.Y, keyState.KeyStates["Y"]);
+                    controllerService.Controller.SetButtonState(Xbox360Button.LeftShoulder, keyState.KeyStates["LB"]);
+                    controllerService.Controller.SetButtonState(Xbox360Button.RightShoulder, keyState.KeyStates["RB"]);
+                }
+
+                bool triggered = false;
+                while (!triggered && !token.IsCancellationRequested)
+                {
+                    var state = joystick.GetCurrentState();
+                    var pressedKeys = new List<string>();
+
+                    foreach (var kv in recordConfig.ButtonIndices)
+                    {
+                        if (kv.Value != null && state.Buttons.Length > kv.Value.Value && state.Buttons[kv.Value.Value])
+                            pressedKeys.Add(kv.Key.Replace("Button", ""));
+                    }
+                    foreach (var kv in recordConfig.ZValues)
+                    {
+                        if (kv.Value != null && state.Z == kv.Value.Value)
+                            pressedKeys.Add(kv.Key.Replace("Button", ""));
+                    }
+                    if (state.PointOfViewControllers != null && state.PointOfViewControllers.Length > 0)
+                    {
+                        int pov = state.PointOfViewControllers[0];
+                        if (pov == 0) pressedKeys.Add("UP");
+                        else if (pov == 9000) pressedKeys.Add("RIGHT");
+                        else if (pov == 18000) pressedKeys.Add("DOWN");
+                        else if (pov == 27000) pressedKeys.Add("LEFT");
+                        else if (pov == 4500) { pressedKeys.Add("UP"); pressedKeys.Add("RIGHT"); }
+                        else if (pov == 13500) { pressedKeys.Add("DOWN"); pressedKeys.Add("RIGHT"); }
+                        else if (pov == 22500) { pressedKeys.Add("DOWN"); pressedKeys.Add("LEFT"); }
+                        else if (pov == 31500) { pressedKeys.Add("UP"); pressedKeys.Add("LEFT"); }
+                    }
+
+
+                    // TRIGGER判定
+                    var triggerdMacros = new List<string>();
+                    foreach (var mt in triggerMacros)
+                    {
+                        if (mt.triggers.All(t => pressedKeys.Contains(t)))
+                        {
+                            triggerdMacros.Add(mt.macroName);
+                        }
+                    }
+
+                    if (triggerdMacros.Count > 0)
+                    {
+                        controllerService.AllOff();
+                        System.Diagnostics.Debug.WriteLine("[MacroPlayer] PlayAsync(ジョイスティック/設定付き) 実行");
+                        await PlayAsync(
+                            triggerdMacros,
+                            frameMs, 0, false, isRandom, xAxisReverse, frame, token
+                        );
+                        triggered = true;
+                    }
+                    await Task.Delay(10, token);
+                }
+            }
+            return;
         }
 
         // MacroKeyStateを内包

@@ -37,13 +37,12 @@ namespace VirtualController
         private MacroPlayer macroPlayer;
         private SharpDX.DirectInput.DirectInput directInput;
         private SharpDX.DirectInput.Joystick currentJoystick;
+        private RecordSettingsForm.RecordSettingsConfig recordConfig;
 
         // MainForm クラス内フィールド追加
         private bool isRecording = false;
         private List<Dictionary<string, string>> recordedFrames = new List<Dictionary<string, string>>();
-        private System.Windows.Forms.Timer recordTimer;
         private DateTime recordStartTime;
-        private RecordSettingsForm.RecordSettingsConfig recordConfig;
 
         /// <summary>
         /// 必要なデザイナー変数です。
@@ -77,12 +76,14 @@ namespace VirtualController
             LoadMacroList();
         }
 
+        // --- 1. 起動時（Form1_Load）で設定ファイルを読み込む ---
         private void Form1_Load(object sender, EventArgs e)
         {
             // --- Form1_Loadでコントローラ操作ボタンを有効化 ---
             this.SetControllerButtonsEnabled(true); // ← 常に有効化
             PlayMacroButton.Text = "再生";
             LoadMacroSettings();
+            recordConfig = LoadRecordSettingsConfig(); // ← 追加
             if (IsRecordSettingsValid())
             {
                 ConnectRecordController();
@@ -134,6 +135,7 @@ namespace VirtualController
                 OverwriteMacro();
             }
 
+
             // UI制御
             PlayMacroButton.Enabled = false;
             PlayMacroButton.Text = "再生中...";
@@ -174,7 +176,9 @@ namespace VirtualController
                         isRandom,
                         XAxisReverseCheckBox.Checked,
                         frame,
-                        token
+                        token,
+                        currentJoystick,
+                        recordConfig
                     );
                 }
                 finally
@@ -898,6 +902,7 @@ namespace VirtualController
                 var result = dlg.ShowDialog(this);
                 if (result == DialogResult.OK)
                 {
+                    recordConfig = LoadRecordSettingsConfig(); // ← 追加
                     if (IsRecordSettingsValid())
                     {
                         ConnectRecordController();
@@ -995,18 +1000,7 @@ namespace VirtualController
                     MessageBox.Show("記録設定が不正です。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
-
-                // 設定ファイル読み込み
-                var configPath = Path.Combine(Application.StartupPath, "RecordSettingsConfig.json");
-                using (var fs = new FileStream(configPath, FileMode.Open))
-                {
-                    var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(
-                        typeof(RecordSettingsForm.RecordSettingsConfig),
-                        new System.Runtime.Serialization.Json.DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true }
-                    );
-                    recordConfig = (RecordSettingsForm.RecordSettingsConfig)serializer.ReadObject(fs);
-                }
-
+                // recordConfig = LoadRecordSettingsConfig(); ← 削除
                 recordedFrames.Clear();
                 recordStartTime = DateTime.Now;
                 int frameMs = 16;
@@ -1242,6 +1236,21 @@ namespace VirtualController
                     LoadMacroList();
                     MessageBox.Show("保存しました。", "保存完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
+            }
+        }
+
+        // --- 1. 設定ファイル読み込み関数を追加 ---
+        private RecordSettingsForm.RecordSettingsConfig LoadRecordSettingsConfig()
+        {
+            var configPath = Path.Combine(Application.StartupPath, "RecordSettingsConfig.json");
+            if (!File.Exists(configPath)) return null;
+            using (var fs = new FileStream(configPath, FileMode.Open))
+            {
+                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(
+                    typeof(RecordSettingsForm.RecordSettingsConfig),
+                    new System.Runtime.Serialization.Json.DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true }
+                );
+                return (RecordSettingsForm.RecordSettingsConfig)serializer.ReadObject(fs);
             }
         }
     }

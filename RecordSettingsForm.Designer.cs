@@ -208,6 +208,7 @@
             this.OKButton.TabIndex = 29;
             this.OKButton.Text = "設定完了";
             this.OKButton.UseVisualStyleBackColor = true;
+            this.OKButton.Click += new System.EventHandler(this.OKButton_Click);;
             // 
             // ControllerComboBox
             // 
@@ -217,6 +218,7 @@
             this.ControllerComboBox.Name = "ControllerComboBox";
             this.ControllerComboBox.Size = new System.Drawing.Size(998, 41);
             this.ControllerComboBox.TabIndex = 31;
+            this.ControllerComboBox.SelectedIndexChanged += new System.EventHandler(this.ControllerComboBox_SelectedIndexChanged);
             // 
             // LogTextBox
             // 
@@ -269,6 +271,7 @@
             this.F1Button.TabIndex = 35;
             this.F1Button.Text = "F1";
             this.F1Button.UseVisualStyleBackColor = true;
+            this.F1Button.Click += new System.EventHandler(this.F1Button_Click);
             // 
             // RecordSettingsForm
             // 
