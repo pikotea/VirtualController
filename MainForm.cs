@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using VirtualController;
 
 
 namespace VirtualController
@@ -34,6 +35,15 @@ namespace VirtualController
         private MacroManager macroManager;
         private ControllerService controllerService;
         private MacroPlayer macroPlayer;
+        private SharpDX.DirectInput.DirectInput directInput;
+        private SharpDX.DirectInput.Joystick currentJoystick;
+
+        // MainForm クラス内フィールド追加
+        private bool isRecording = false;
+        private List<Dictionary<string, string>> recordedFrames = new List<Dictionary<string, string>>();
+        private System.Windows.Forms.Timer recordTimer;
+        private DateTime recordStartTime;
+        private RecordSettingsForm.RecordSettingsConfig recordConfig;
 
         /// <summary>
         /// 必要なデザイナー変数です。
@@ -55,21 +65,29 @@ namespace VirtualController
 
 
         // 2. コンストラクタで初期化
+        // --- コンストラクタで自動接続 ---
         public MainForm()
         {
             InitializeComponent();
             controllerService = new ControllerService();
+            controllerService.Connect(); // ← 起動時に自動接続
             macroManager = new MacroManager(macroFolder);
-            macroPlayer = new MacroPlayer(controllerService, macroFolder); // 追加
+            macroPlayer = new MacroPlayer(controllerService, macroFolder);
             StartMacroFolderWatcher();
             LoadMacroList();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            this.SetControllerButtonsEnabled(false);
+            // --- Form1_Loadでコントローラ操作ボタンを有効化 ---
+            this.SetControllerButtonsEnabled(true); // ← 常に有効化
             PlayMacroButton.Text = "再生";
             LoadMacroSettings();
+            if (IsRecordSettingsValid())
+            {
+                ConnectRecordController();
+            }
+            UpdateRecButtonEnabled();
         }
 
         // マクロ一覧のリロード
@@ -207,54 +225,35 @@ namespace VirtualController
             }
         }
 
-        // 接続
-        private void ConnectButton_Click(object sender, EventArgs e)
-        {
-            controllerService.Connect();
-            this.SetControllerButtonsEnabled(true);
-        }
-
-        // 切断
-        private void DisconnectButton_Click(object sender, EventArgs e)
-        {
-            controllerService.Disconnect();
-            this.SetControllerButtonsEnabled(false);
-        }
-
         /// <summary>
-        /// 接続・切断以外のコントローラ操作ボタンを有効/無効化
+        /// コントローラ操作ボタンの有効/無効化（簡略化）
         /// </summary>
         private void SetControllerButtonsEnabled(bool enabled)
         {
-            // 接続・切断ボタン以外を対象
             foreach (var btn in this.Controls.OfType<Button>())
             {
-                if (btn.Name == "ConnectButton")
-                {
-                    btn.Enabled = !enabled;
-                }
-                else if (btn.Name == "NewMacroButton" || btn.Name == "SaveAsButton" || btn.Name == "OverwriteSaveButton")
+                if (btn.Name == "NewMacroButton" || btn.Name == "SaveAsButton" || btn.Name == "OverwriteSaveButton")
                 {
                     // 新規作成・保存系ボタンは独立
                 }
                 else if (btn.Name == "PlayMacroButton")
                 {
-                    // 再生ボタンは「接続済み」かつ「マクロ選択済み」の場合のみ有効
                     btn.Enabled = enabled && MacroListBox.SelectedItems.Count > 0;
                 }
                 else if (btn.Name == "StopMacroButton")
                 {
-                    // 停止ボタンは再生中のみ有効
                     btn.Enabled = isMacroPlaying;
                 }
                 else if (btn.Name == "DebugMacroButton")
                 {
-                    // デバッグボタンはマクロ選択状態でのみ有効
                     btn.Enabled = MacroListBox.SelectedItems.Count > 0;
                 }
                 else if (btn.Name == "OpenMacroFolderButton")
                 {
-                    // フォルダを開くボタンは常に有効
+                    btn.Enabled = true;
+                }
+                else if (btn.Name == "RecSettingButton")
+                {
                     btn.Enabled = true;
                 }
                 else
@@ -273,7 +272,6 @@ namespace VirtualController
 
             loadedMacro.Clear();
             string lastMacroName = null;
-            bool macroLoaded = false;
             foreach (var macroNameObj in MacroListBox.SelectedItems)
             {
                 string macroName = macroNameObj as string;
@@ -283,7 +281,6 @@ namespace VirtualController
                 if (macroFrames != null && macroFrames.Count > 0)
                 {
                     loadedMacro.AddRange(macroFrames);
-                    macroLoaded = true;
                 }
                 lastMacroName = macroName;
             }
@@ -308,8 +305,8 @@ namespace VirtualController
             SaveAsButton.Enabled = true;
             // 上書き保存は初期状態では無効
             OverwriteSaveButton.Enabled = false;
-            // 再生ボタンの有効化条件を変更
-            PlayMacroButton.Enabled = macroLoaded && controllerService.IsConnected && DisconnectButton.Enabled;
+
+            PlayMacroButton.Enabled = MacroListBox.SelectedItems.Count > 0;
 
             DeleteMicroButton.Enabled = MacroListBox.SelectedItems.Count > 0;
 
@@ -843,7 +840,7 @@ namespace VirtualController
         {
             controllerService.SetInputs(
                 null,
-                new Dictionary<Xbox360Button, bool> { { Xbox360Button.RightShoulder, true } });         
+                new Dictionary<Xbox360Button, bool> { { Xbox360Button.RightShoulder, true } });
         }
         private void RBButton_MouseUp(object sender, MouseEventArgs e)
         {
@@ -892,6 +889,360 @@ namespace VirtualController
             controllerService.SetInputs(
                 null,
                 new Dictionary<Xbox360Button, bool> { { Xbox360Button.Back, false } });
+        }
+
+        private void RecSettingButton_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new RecordSettingsForm())
+            {
+                var result = dlg.ShowDialog(this);
+                if (result == DialogResult.OK)
+                {
+                    if (IsRecordSettingsValid())
+                    {
+                        ConnectRecordController();
+                    }
+                    UpdateRecButtonEnabled();
+                }
+            }
+        }
+
+
+        // 記録設定が揃っているか判定するメソッド
+        private bool IsRecordSettingsValid()
+        {
+            // RecordSettingsConfig.json の存在と内容チェック
+            var configPath = Path.Combine(Application.StartupPath, "RecordSettingsConfig.json");
+            if (!File.Exists(configPath)) return false;
+
+            try
+            {
+                using (var fs = new FileStream(configPath, FileMode.Open))
+                {
+                    var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(
+                        typeof(RecordSettingsForm.RecordSettingsConfig),
+                        new System.Runtime.Serialization.Json.DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true }
+                    );
+                    var config = (RecordSettingsForm.RecordSettingsConfig)serializer.ReadObject(fs);
+
+                    // コントローラーGUIDとボタン割り当てが全て揃っているか
+                    if (config.ControllerGuid == Guid.Empty) return false;
+                    var btns = new[] { "LPButton", "MPButton", "HPButton", "LKButton", "MKButton", "HKButton" };
+                    foreach (var btn in btns)
+                    {
+                        if ((config.ButtonIndices == null || !config.ButtonIndices.ContainsKey(btn) || config.ButtonIndices[btn] == null)
+                            && (config.ZValues == null || !config.ZValues.ContainsKey(btn) || config.ZValues[btn] == null))
+                            return false;
+                    }
+                    return true;
+                }
+            }
+            catch (System.Runtime.Serialization.SerializationException)
+            {
+                return false;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        // コントローラー接続処理
+        private void ConnectRecordController()
+        {
+            // 既存のジョイスティックを解放
+            currentJoystick?.Unacquire();
+            currentJoystick?.Dispose();
+
+            var configPath = Path.Combine(Application.StartupPath, "RecordSettingsConfig.json");
+            if (!File.Exists(configPath)) return;
+
+            using (var fs = new FileStream(configPath, FileMode.Open))
+            {
+                var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(
+                    typeof(RecordSettingsForm.RecordSettingsConfig),
+                    new System.Runtime.Serialization.Json.DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true }
+                );
+                var config = (RecordSettingsForm.RecordSettingsConfig)serializer.ReadObject(fs);
+                if (config.ControllerGuid == Guid.Empty) return;
+
+                directInput = new SharpDX.DirectInput.DirectInput();
+                var devices = directInput.GetDevices(SharpDX.DirectInput.DeviceType.Gamepad, SharpDX.DirectInput.DeviceEnumerationFlags.AllDevices)
+                    .Concat(directInput.GetDevices(SharpDX.DirectInput.DeviceType.Joystick, SharpDX.DirectInput.DeviceEnumerationFlags.AllDevices))
+                    .Concat(directInput.GetDevices(SharpDX.DirectInput.DeviceClass.GameControl, SharpDX.DirectInput.DeviceEnumerationFlags.AllDevices))
+                    .ToList();
+
+                var device = devices.FirstOrDefault(d => d.InstanceGuid == config.ControllerGuid);
+                if (device == null) return;
+
+                currentJoystick = new SharpDX.DirectInput.Joystick(directInput, device.InstanceGuid);
+                currentJoystick.Acquire();
+            }
+        }
+
+        // 記録スタートボタンの有効化
+        private void UpdateRecButtonEnabled()
+        {
+            RecButton.Enabled = currentJoystick != null && IsRecordSettingsValid();
+        }
+
+        private async void RecButton_Click(object sender, EventArgs e)
+        {
+            if (!isRecording)
+            {
+                if (!IsRecordSettingsValid() || currentJoystick == null)
+                {
+                    MessageBox.Show("記録設定が不正です。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 設定ファイル読み込み
+                var configPath = Path.Combine(Application.StartupPath, "RecordSettingsConfig.json");
+                using (var fs = new FileStream(configPath, FileMode.Open))
+                {
+                    var serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(
+                        typeof(RecordSettingsForm.RecordSettingsConfig),
+                        new System.Runtime.Serialization.Json.DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true }
+                    );
+                    recordConfig = (RecordSettingsForm.RecordSettingsConfig)serializer.ReadObject(fs);
+                }
+
+                recordedFrames.Clear();
+                recordStartTime = DateTime.Now;
+                int frameMs = 16;
+                double.TryParse(FrameMsTextBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out double frameMsDouble);
+                frameMs = (int)frameMsDouble;
+
+                RecButton.Text = "記録中（停止する）";
+                isRecording = true;
+
+                await Task.Run(async () =>
+                {
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    long nextTick = sw.ElapsedMilliseconds;
+                    while (isRecording)
+                    {
+                        var state = currentJoystick.GetCurrentState();
+                        var frame = new Dictionary<string, string>();
+
+                        // ボタン記録（従来通り）
+                        var btnMap = recordConfig.ButtonIndices;
+                        var zMap = recordConfig.ZValues;
+                        var btnNames = new[] { "LPButton", "MPButton", "HPButton", "LKButton", "MKButton", "HKButton" };
+                        for (int i = 0; i < btnNames.Length; i++)
+                        {
+                            string logical = btnNames[i].Replace("Button", "");
+                            bool pressed = false;
+                            if (btnMap != null && btnMap.ContainsKey(btnNames[i]) && btnMap[btnNames[i]] != null)
+                            {
+                                int idx = btnMap[btnNames[i]].Value;
+                                if (idx >= 0 && idx < state.Buttons.Length)
+                                    pressed = state.Buttons[idx];
+                            }
+                            else if (zMap != null && zMap.ContainsKey(btnNames[i]) && zMap[btnNames[i]] != null)
+                            {
+                                int z = zMap[btnNames[i]].Value;
+                                if (state.Z == z)
+                                    pressed = true;
+                            }
+                            if (pressed)
+                                frame[logical] = "1";
+                        }
+
+                        // POV（方向キー）記録（斜め対応）
+                        var povs = state.PointOfViewControllers;
+                        if (povs != null && povs.Length > 0)
+                        {
+                            int pov = povs[0];
+                            if (pov >= 0)
+                            {
+                                // POV値は36000で一周、9000単位で方向
+                                // 斜め方向
+                                if (pov == 4500) { frame["UP"] = "1"; frame["RIGHT"] = "1"; }
+                                else if (pov == 13500) { frame["DOWN"] = "1"; frame["RIGHT"] = "1"; }
+                                else if (pov == 22500) { frame["DOWN"] = "1"; frame["LEFT"] = "1"; }
+                                else if (pov == 31500) { frame["UP"] = "1"; frame["LEFT"] = "1"; }
+                                // 単方向
+                                else if (pov == 0) frame["UP"] = "1";
+                                else if (pov == 9000) frame["RIGHT"] = "1";
+                                else if (pov == 18000) frame["DOWN"] = "1";
+                                else if (pov == 27000) frame["LEFT"] = "1";
+                            }
+                        }
+                        recordedFrames.Add(frame);
+
+                        nextTick += frameMs;
+                        long sleep = nextTick - sw.ElapsedMilliseconds;
+                        if (sleep > 0)
+                            await Task.Delay((int)sleep);
+                        else
+                            await Task.Yield();
+                    }
+                });
+            }
+            else
+            {
+                isRecording = false;
+                RecButton.Text = "記録スタート";
+                RemoveEmptyFrames(recordedFrames);
+                ShowRecordSaveDialog();
+            }
+        }
+
+        // 空フレーム除去
+        private void RemoveEmptyFrames(List<Dictionary<string, string>> frames)
+        {
+            // 先頭
+            while (frames.Count > 0 && frames[0].Count == 0)
+                frames.RemoveAt(0);
+            // 末尾
+            while (frames.Count > 0 && frames[frames.Count - 1].Count == 0)
+                frames.RemoveAt(frames.Count - 1);
+        }
+
+        // 記録後の保存ダイアログ
+        private void ShowRecordSaveDialog()
+        {
+            var dialog = new Form
+            {
+                Text = "記録データの保存",
+                Width = 400,
+                Height = 200,
+                StartPosition = FormStartPosition.CenterParent
+            };
+
+            var label = new Label
+            {
+                Text = "記録したデータをどのように保存しますか？",
+                Dock = DockStyle.Top,
+                Height = 40
+            };
+            dialog.Controls.Add(label);
+
+            var overwriteButton = new Button
+            {
+                Text = "選択中マクロに上書き保存",
+                Dock = DockStyle.Bottom,
+                Height = 40
+            };
+            overwriteButton.Click += (s, e) =>
+            {
+                SaveRecordedMacro(true);
+                dialog.Close();
+            };
+            dialog.Controls.Add(overwriteButton);
+
+            var saveAsButton = new Button
+            {
+                Text = "名前を付けて保存",
+                Dock = DockStyle.Bottom,
+                Height = 40
+            };
+            saveAsButton.Click += (s, e) =>
+            {
+                SaveRecordedMacro(false);
+                dialog.Close();
+            };
+            dialog.Controls.Add(saveAsButton);
+
+            dialog.ShowDialog();
+        }
+
+        // マクロファイル保存処理
+        private void SaveRecordedMacro(bool overwrite)
+        {
+            // 優先順位リスト
+            var keyOrder = new[] { "UP", "DOWN", "LEFT", "RIGHT", "LP", "MP", "HP", "LK", "MK", "HK" };
+            // 方向キーのキャメルケース変換用
+            var directionCamel = new Dictionary<string, string>
+            {
+                { "UP", "Up" }, { "DOWN", "Down" }, { "LEFT", "Left" }, { "RIGHT", "Right" }
+            };
+
+            var sb = new StringBuilder();
+            int waitCount = 0;
+            int opCount = 0;
+            List<string> lastOps = null;
+
+            for (int i = 0; i < recordedFrames.Count; i++)
+            {
+                var frame = recordedFrames[i];
+                if (frame.Count == 0)
+                {
+                    if (lastOps != null)
+                    {
+                        sb.AppendLine($"{opCount}: {string.Join(", ", lastOps)}");
+                        lastOps = null;
+                        opCount = 0;
+                    }
+                    waitCount++;
+                }
+                else
+                {
+                    // 優先順位で並べ替え＋方向キーはキャメルケース
+                    var ops = frame.Keys
+                        .Select(k => {
+                            var upper = k.ToUpper();
+                            return directionCamel.ContainsKey(upper) ? directionCamel[upper] : upper;
+                        })
+                        .Where(k => keyOrder.Contains(k.ToUpper()) || directionCamel.Values.Contains(k))
+                        .OrderBy(k => Array.IndexOf(keyOrder, directionCamel.ContainsValue(k) ? keyOrder.First(x => directionCamel[x] == k) : k.ToUpper()))
+                        .ToList();
+
+                    if (waitCount > 0)
+                    {
+                        sb.AppendLine($"{waitCount}: ");
+                        waitCount = 0;
+                    }
+                    if (lastOps != null && ops.SequenceEqual(lastOps))
+                    {
+                        opCount++;
+                    }
+                    else
+                    {
+                        if (lastOps != null)
+                        {
+                            sb.AppendLine($"{opCount}: {string.Join(", ", lastOps)}");
+                        }
+                        lastOps = ops;
+                        opCount = 1;
+                    }
+                }
+            }
+            if (lastOps != null)
+            {
+                sb.AppendLine($"{opCount}: {string.Join(", ", lastOps)}");
+            }
+            if (waitCount > 0)
+            {
+                sb.AppendLine($"{waitCount}: ");
+            }
+
+            if (overwrite && MacroListBox.SelectedItems.Count > 0)
+            {
+                string macroName = MacroListBox.SelectedItems[MacroListBox.SelectedItems.Count - 1] as string;
+                if (!string.IsNullOrEmpty(macroName))
+                {
+                    macroManager.SaveMacro(macroName, sb.ToString());
+                    LoadMacroList();
+                    MessageBox.Show("上書き保存しました。", "保存完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+            }
+
+            using (var sfd = new SaveFileDialog())
+            {
+                sfd.InitialDirectory = macroFolder;
+                sfd.Filter = "CSVファイル (*.csv)|*.csv";
+                sfd.FileName = $"新規記録_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    string macroName = Path.GetFileNameWithoutExtension(sfd.FileName);
+                    macroManager.SaveMacro(macroName, sb.ToString());
+                    LoadMacroList();
+                    MessageBox.Show("保存しました。", "保存完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
         }
     }
 }
