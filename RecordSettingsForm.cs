@@ -264,6 +264,7 @@ namespace VirtualController
         private void LKButton_Click(object sender, EventArgs e) => StartListening(LKButton, LKLabel);
         private void MKButton_Click(object sender, EventArgs e) => StartListening(MKButton, MKLabel);
         private void HKButton_Click(object sender, EventArgs e) => StartListening(HKButton, HKLabel);
+        private void F1Button_Click(object sender, EventArgs e) => StartListening(F1Button, F1Label); // 追加
 
         private void OKButton_Click(object sender, EventArgs e)
         {
@@ -278,7 +279,7 @@ namespace VirtualController
             if (ControllerComboBox.SelectedIndex >= 0)
                 config.ControllerGuid = uniqueDevices[ControllerComboBox.SelectedIndex].InstanceGuid;
 
-            var buttons = new[] { LPButton, MPButton, HPButton, LKButton, MKButton, HKButton };
+            var buttons = new[] { LPButton, MPButton, HPButton, LKButton, MKButton, HKButton, F1Button }; // 追加
             foreach (var btn in buttons)
             {
                 config.ButtonIndices[btn.Name] = (assignedButtonIndices.ContainsKey(btn) && assignedButtonIndices[btn] != null)
@@ -319,7 +320,7 @@ namespace VirtualController
             }
 
             // 割り当て復元
-            var buttons = new[] { LPButton, MPButton, HPButton, LKButton, MKButton, HKButton };
+            var buttons = new[] { LPButton, MPButton, HPButton, LKButton, MKButton, HKButton, F1Button };
             foreach (var btn in buttons)
             {
                 assignedButtonIndices[btn] = config.ButtonIndices.ContainsKey(btn.Name) ? config.ButtonIndices[btn.Name] : null;

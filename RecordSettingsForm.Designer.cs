@@ -46,6 +46,10 @@
             this.ControllerComboBox = new System.Windows.Forms.ComboBox();
             this.LogTextBox = new System.Windows.Forms.TextBox();
             this.LogLabel = new System.Windows.Forms.Label();
+            this.OptionGroupBox = new System.Windows.Forms.GroupBox();
+            this.F1Label = new System.Windows.Forms.Label();
+            this.F1Button = new System.Windows.Forms.Button();
+            this.OptionGroupBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // ControllerLabel
@@ -234,12 +238,45 @@
             this.LogLabel.TabIndex = 33;
             this.LogLabel.Text = "操作ログ";
             // 
+            // OptionGroupBox
+            // 
+            this.OptionGroupBox.Controls.Add(this.F1Label);
+            this.OptionGroupBox.Controls.Add(this.F1Button);
+            this.OptionGroupBox.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.OptionGroupBox.Location = new System.Drawing.Point(567, 369);
+            this.OptionGroupBox.Name = "OptionGroupBox";
+            this.OptionGroupBox.Size = new System.Drawing.Size(388, 170);
+            this.OptionGroupBox.TabIndex = 34;
+            this.OptionGroupBox.TabStop = false;
+            this.OptionGroupBox.Text = "ファンクションボタン（オプション）";
+            // 
+            // F1Label
+            // 
+            this.F1Label.AutoSize = true;
+            this.F1Label.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.F1Label.Location = new System.Drawing.Point(108, 123);
+            this.F1Label.Name = "F1Label";
+            this.F1Label.Size = new System.Drawing.Size(102, 27);
+            this.F1Label.TabIndex = 36;
+            this.F1Label.Text = "未割り当て";
+            // 
+            // F1Button
+            // 
+            this.F1Button.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.F1Button.Location = new System.Drawing.Point(97, 44);
+            this.F1Button.Name = "F1Button";
+            this.F1Button.Size = new System.Drawing.Size(125, 67);
+            this.F1Button.TabIndex = 35;
+            this.F1Button.Text = "F1";
+            this.F1Button.UseVisualStyleBackColor = true;
+            // 
             // RecordSettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(1048, 762);
+            this.Controls.Add(this.OptionGroupBox);
             this.Controls.Add(this.LogLabel);
             this.Controls.Add(this.LogTextBox);
             this.Controls.Add(this.OKButton);
@@ -260,6 +297,8 @@
             this.Controls.Add(this.ControllerComboBox);
             this.Name = "RecordSettingsForm";
             this.Text = "記録設定";
+            this.OptionGroupBox.ResumeLayout(false);
+            this.OptionGroupBox.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -284,5 +323,8 @@
         private System.Windows.Forms.ComboBox ControllerComboBox;
         private System.Windows.Forms.TextBox LogTextBox;
         private System.Windows.Forms.Label LogLabel;
+        private System.Windows.Forms.GroupBox OptionGroupBox;
+        private System.Windows.Forms.Label F1Label;
+        private System.Windows.Forms.Button F1Button;
     }
 }
