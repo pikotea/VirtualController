@@ -105,6 +105,9 @@ namespace VirtualController
 
             LogTextBox.AppendText($"[{DateTime.Now:HH:mm:ss}] コントローラー「{device.InstanceName}」に接続しました。\r\n");
 
+            var defaultState = currentJoystick.GetCurrentState();
+            var defaultZValue = defaultState.Z;
+
             var timer = new Timer();
             timer.Interval = 1000 / 60 * 2; // 2フレームに1回
             timer.Tick += (s, ev) =>
@@ -143,7 +146,7 @@ namespace VirtualController
 
                     // Z軸の値を取得し、変化があればログ出力
                     int zValue = state.Z;
-                    if (zValue != 32767)
+                    if (zValue != defaultZValue)
                     {
                         string zLog = $"[{DateTime.Now:HH:mm:ss}] Z軸: {zValue}\r\n";
                         if (zValue == 128)
