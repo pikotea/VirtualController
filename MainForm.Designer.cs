@@ -10,6 +10,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.UpButton = new System.Windows.Forms.Button();
             this.UpRightButton = new System.Windows.Forms.Button();
             this.UpLeftButton = new System.Windows.Forms.Button();
@@ -54,9 +55,10 @@
             // UpButton
             // 
             this.UpButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.UpButton.Location = new System.Drawing.Point(169, 24);
+            this.UpButton.Location = new System.Drawing.Point(101, 16);
+            this.UpButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.UpButton.Name = "UpButton";
-            this.UpButton.Size = new System.Drawing.Size(131, 67);
+            this.UpButton.Size = new System.Drawing.Size(79, 45);
             this.UpButton.TabIndex = 2;
             this.UpButton.Text = "↑";
             this.UpButton.UseVisualStyleBackColor = true;
@@ -66,9 +68,10 @@
             // UpRightButton
             // 
             this.UpRightButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.UpRightButton.Location = new System.Drawing.Point(314, 24);
+            this.UpRightButton.Location = new System.Drawing.Point(188, 16);
+            this.UpRightButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.UpRightButton.Name = "UpRightButton";
-            this.UpRightButton.Size = new System.Drawing.Size(131, 67);
+            this.UpRightButton.Size = new System.Drawing.Size(79, 45);
             this.UpRightButton.TabIndex = 3;
             this.UpRightButton.Text = "↗";
             this.UpRightButton.UseVisualStyleBackColor = true;
@@ -78,9 +81,10 @@
             // UpLeftButton
             // 
             this.UpLeftButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.UpLeftButton.Location = new System.Drawing.Point(24, 24);
+            this.UpLeftButton.Location = new System.Drawing.Point(14, 16);
+            this.UpLeftButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.UpLeftButton.Name = "UpLeftButton";
-            this.UpLeftButton.Size = new System.Drawing.Size(131, 67);
+            this.UpLeftButton.Size = new System.Drawing.Size(79, 45);
             this.UpLeftButton.TabIndex = 4;
             this.UpLeftButton.Text = "↖";
             this.UpLeftButton.UseVisualStyleBackColor = true;
@@ -90,9 +94,10 @@
             // DownLeftButton
             // 
             this.DownLeftButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.DownLeftButton.Location = new System.Drawing.Point(24, 184);
+            this.DownLeftButton.Location = new System.Drawing.Point(14, 123);
+            this.DownLeftButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.DownLeftButton.Name = "DownLeftButton";
-            this.DownLeftButton.Size = new System.Drawing.Size(131, 67);
+            this.DownLeftButton.Size = new System.Drawing.Size(79, 45);
             this.DownLeftButton.TabIndex = 7;
             this.DownLeftButton.Text = "↙";
             this.DownLeftButton.UseVisualStyleBackColor = true;
@@ -102,9 +107,10 @@
             // DownRightButton
             // 
             this.DownRightButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.DownRightButton.Location = new System.Drawing.Point(314, 184);
+            this.DownRightButton.Location = new System.Drawing.Point(188, 123);
+            this.DownRightButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.DownRightButton.Name = "DownRightButton";
-            this.DownRightButton.Size = new System.Drawing.Size(131, 67);
+            this.DownRightButton.Size = new System.Drawing.Size(79, 45);
             this.DownRightButton.TabIndex = 6;
             this.DownRightButton.Text = "↘";
             this.DownRightButton.UseVisualStyleBackColor = true;
@@ -114,9 +120,10 @@
             // DownButton
             // 
             this.DownButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.DownButton.Location = new System.Drawing.Point(169, 184);
+            this.DownButton.Location = new System.Drawing.Point(101, 123);
+            this.DownButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.DownButton.Name = "DownButton";
-            this.DownButton.Size = new System.Drawing.Size(131, 67);
+            this.DownButton.Size = new System.Drawing.Size(79, 45);
             this.DownButton.TabIndex = 5;
             this.DownButton.Text = "↓";
             this.DownButton.UseVisualStyleBackColor = true;
@@ -126,9 +133,10 @@
             // RightButton
             // 
             this.RightButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.RightButton.Location = new System.Drawing.Point(314, 104);
+            this.RightButton.Location = new System.Drawing.Point(188, 69);
+            this.RightButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.RightButton.Name = "RightButton";
-            this.RightButton.Size = new System.Drawing.Size(131, 67);
+            this.RightButton.Size = new System.Drawing.Size(79, 45);
             this.RightButton.TabIndex = 8;
             this.RightButton.Text = "→";
             this.RightButton.UseVisualStyleBackColor = true;
@@ -138,9 +146,10 @@
             // LeftButton
             // 
             this.LeftButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.LeftButton.Location = new System.Drawing.Point(24, 104);
+            this.LeftButton.Location = new System.Drawing.Point(14, 69);
+            this.LeftButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.LeftButton.Name = "LeftButton";
-            this.LeftButton.Size = new System.Drawing.Size(131, 67);
+            this.LeftButton.Size = new System.Drawing.Size(79, 45);
             this.LeftButton.TabIndex = 9;
             this.LeftButton.Text = "←";
             this.LeftButton.UseVisualStyleBackColor = true;
@@ -150,9 +159,10 @@
             // XButton
             // 
             this.XButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.XButton.Location = new System.Drawing.Point(500, 104);
+            this.XButton.Location = new System.Drawing.Point(300, 69);
+            this.XButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.XButton.Name = "XButton";
-            this.XButton.Size = new System.Drawing.Size(131, 67);
+            this.XButton.Size = new System.Drawing.Size(79, 45);
             this.XButton.TabIndex = 12;
             this.XButton.Text = "X/LP";
             this.XButton.UseVisualStyleBackColor = true;
@@ -162,9 +172,10 @@
             // RBButton
             // 
             this.RBButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.RBButton.Location = new System.Drawing.Point(780, 104);
+            this.RBButton.Location = new System.Drawing.Point(468, 69);
+            this.RBButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.RBButton.Name = "RBButton";
-            this.RBButton.Size = new System.Drawing.Size(131, 67);
+            this.RBButton.Size = new System.Drawing.Size(79, 45);
             this.RBButton.TabIndex = 11;
             this.RBButton.Text = "RB/HP";
             this.RBButton.UseVisualStyleBackColor = true;
@@ -174,9 +185,10 @@
             // YButton
             // 
             this.YButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.YButton.Location = new System.Drawing.Point(640, 104);
+            this.YButton.Location = new System.Drawing.Point(384, 69);
+            this.YButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.YButton.Name = "YButton";
-            this.YButton.Size = new System.Drawing.Size(131, 67);
+            this.YButton.Size = new System.Drawing.Size(79, 45);
             this.YButton.TabIndex = 10;
             this.YButton.Text = "Y/MP";
             this.YButton.UseVisualStyleBackColor = true;
@@ -186,9 +198,10 @@
             // AButton
             // 
             this.AButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.AButton.Location = new System.Drawing.Point(500, 184);
+            this.AButton.Location = new System.Drawing.Point(300, 123);
+            this.AButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.AButton.Name = "AButton";
-            this.AButton.Size = new System.Drawing.Size(131, 67);
+            this.AButton.Size = new System.Drawing.Size(79, 45);
             this.AButton.TabIndex = 15;
             this.AButton.Text = "A/LK";
             this.AButton.UseVisualStyleBackColor = true;
@@ -198,9 +211,10 @@
             // LBButton
             // 
             this.LBButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.LBButton.Location = new System.Drawing.Point(780, 184);
+            this.LBButton.Location = new System.Drawing.Point(468, 123);
+            this.LBButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.LBButton.Name = "LBButton";
-            this.LBButton.Size = new System.Drawing.Size(131, 67);
+            this.LBButton.Size = new System.Drawing.Size(79, 45);
             this.LBButton.TabIndex = 14;
             this.LBButton.Text = "LB/HK";
             this.LBButton.UseVisualStyleBackColor = true;
@@ -210,9 +224,10 @@
             // BButton
             // 
             this.BButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.BButton.Location = new System.Drawing.Point(640, 184);
+            this.BButton.Location = new System.Drawing.Point(384, 123);
+            this.BButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.BButton.Name = "BButton";
-            this.BButton.Size = new System.Drawing.Size(131, 67);
+            this.BButton.Size = new System.Drawing.Size(79, 45);
             this.BButton.TabIndex = 13;
             this.BButton.Text = "B/MK";
             this.BButton.UseVisualStyleBackColor = true;
@@ -222,9 +237,10 @@
             // StartButton
             // 
             this.StartButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.StartButton.Location = new System.Drawing.Point(500, 24);
+            this.StartButton.Location = new System.Drawing.Point(300, 16);
+            this.StartButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.StartButton.Name = "StartButton";
-            this.StartButton.Size = new System.Drawing.Size(131, 67);
+            this.StartButton.Size = new System.Drawing.Size(79, 45);
             this.StartButton.TabIndex = 19;
             this.StartButton.Text = "START";
             this.StartButton.UseVisualStyleBackColor = true;
@@ -234,9 +250,10 @@
             // BackButton
             // 
             this.BackButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.BackButton.Location = new System.Drawing.Point(640, 24);
+            this.BackButton.Location = new System.Drawing.Point(384, 16);
+            this.BackButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.BackButton.Name = "BackButton";
-            this.BackButton.Size = new System.Drawing.Size(131, 67);
+            this.BackButton.Size = new System.Drawing.Size(79, 45);
             this.BackButton.TabIndex = 18;
             this.BackButton.Text = "BACK";
             this.BackButton.UseVisualStyleBackColor = true;
@@ -247,20 +264,22 @@
             // 
             this.MacroListBox.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.MacroListBox.FormattingEnabled = true;
-            this.MacroListBox.ItemHeight = 27;
-            this.MacroListBox.Location = new System.Drawing.Point(45, 385);
+            this.MacroListBox.ItemHeight = 18;
+            this.MacroListBox.Location = new System.Drawing.Point(27, 257);
+            this.MacroListBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.MacroListBox.Name = "MacroListBox";
             this.MacroListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.MacroListBox.Size = new System.Drawing.Size(500, 193);
+            this.MacroListBox.Size = new System.Drawing.Size(302, 130);
             this.MacroListBox.TabIndex = 21;
             this.MacroListBox.SelectedIndexChanged += new System.EventHandler(this.MacroListBox_SelectedIndexChanged);
             // 
             // PlayMacroButton
             // 
             this.PlayMacroButton.Font = new System.Drawing.Font("メイリオ", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.PlayMacroButton.Location = new System.Drawing.Point(609, 480);
+            this.PlayMacroButton.Location = new System.Drawing.Point(365, 320);
+            this.PlayMacroButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.PlayMacroButton.Name = "PlayMacroButton";
-            this.PlayMacroButton.Size = new System.Drawing.Size(308, 85);
+            this.PlayMacroButton.Size = new System.Drawing.Size(185, 57);
             this.PlayMacroButton.TabIndex = 22;
             this.PlayMacroButton.Text = "再生";
             this.PlayMacroButton.UseVisualStyleBackColor = true;
@@ -269,11 +288,12 @@
             // MacroEditTextBox
             // 
             this.MacroEditTextBox.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.MacroEditTextBox.Location = new System.Drawing.Point(45, 630);
+            this.MacroEditTextBox.Location = new System.Drawing.Point(27, 420);
+            this.MacroEditTextBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.MacroEditTextBox.Multiline = true;
             this.MacroEditTextBox.Name = "MacroEditTextBox";
             this.MacroEditTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.MacroEditTextBox.Size = new System.Drawing.Size(695, 300);
+            this.MacroEditTextBox.Size = new System.Drawing.Size(419, 201);
             this.MacroEditTextBox.TabIndex = 23;
             this.MacroEditTextBox.TextChanged += new System.EventHandler(this.MacroEditTextBox_TextChanged);
             // 
@@ -281,9 +301,10 @@
             // 
             this.SaveAsButton.Enabled = false;
             this.SaveAsButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.SaveAsButton.Location = new System.Drawing.Point(789, 750);
+            this.SaveAsButton.Location = new System.Drawing.Point(473, 500);
+            this.SaveAsButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.SaveAsButton.Name = "SaveAsButton";
-            this.SaveAsButton.Size = new System.Drawing.Size(220, 46);
+            this.SaveAsButton.Size = new System.Drawing.Size(132, 31);
             this.SaveAsButton.TabIndex = 24;
             this.SaveAsButton.Text = "名前を付けて保存";
             this.SaveAsButton.UseVisualStyleBackColor = true;
@@ -293,9 +314,10 @@
             // 
             this.RepeatCheckBox.AutoSize = true;
             this.RepeatCheckBox.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.RepeatCheckBox.Location = new System.Drawing.Point(609, 431);
+            this.RepeatCheckBox.Location = new System.Drawing.Point(365, 287);
+            this.RepeatCheckBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.RepeatCheckBox.Name = "RepeatCheckBox";
-            this.RepeatCheckBox.Size = new System.Drawing.Size(110, 31);
+            this.RepeatCheckBox.Size = new System.Drawing.Size(75, 22);
             this.RepeatCheckBox.TabIndex = 25;
             this.RepeatCheckBox.Text = "繰り返し";
             this.RepeatCheckBox.UseVisualStyleBackColor = true;
@@ -305,9 +327,10 @@
             // 
             this.RandomCheckBox.AutoSize = true;
             this.RandomCheckBox.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.RandomCheckBox.Location = new System.Drawing.Point(735, 431);
+            this.RandomCheckBox.Location = new System.Drawing.Point(441, 287);
+            this.RandomCheckBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.RandomCheckBox.Name = "RandomCheckBox";
-            this.RandomCheckBox.Size = new System.Drawing.Size(110, 31);
+            this.RandomCheckBox.Size = new System.Drawing.Size(75, 22);
             this.RandomCheckBox.TabIndex = 26;
             this.RandomCheckBox.Text = "ランダム";
             this.RandomCheckBox.UseVisualStyleBackColor = true;
@@ -316,9 +339,10 @@
             // FrameMsTextBox
             // 
             this.FrameMsTextBox.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.FrameMsTextBox.Location = new System.Drawing.Point(804, 385);
+            this.FrameMsTextBox.Location = new System.Drawing.Point(482, 257);
+            this.FrameMsTextBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.FrameMsTextBox.Name = "FrameMsTextBox";
-            this.FrameMsTextBox.Size = new System.Drawing.Size(71, 34);
+            this.FrameMsTextBox.Size = new System.Drawing.Size(44, 25);
             this.FrameMsTextBox.TabIndex = 27;
             this.FrameMsTextBox.Text = "16.6";
             this.FrameMsTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -328,9 +352,10 @@
             // 
             this.FrameMsLabel.AutoSize = true;
             this.FrameMsLabel.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.FrameMsLabel.Location = new System.Drawing.Point(609, 388);
+            this.FrameMsLabel.Location = new System.Drawing.Point(365, 259);
+            this.FrameMsLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.FrameMsLabel.Name = "FrameMsLabel";
-            this.FrameMsLabel.Size = new System.Drawing.Size(185, 27);
+            this.FrameMsLabel.Size = new System.Drawing.Size(123, 18);
             this.FrameMsLabel.TabIndex = 28;
             this.FrameMsLabel.Text = "1フレームのミリ秒：";
             // 
@@ -338,18 +363,20 @@
             // 
             this.PlayWaitLabel.AutoSize = true;
             this.PlayWaitLabel.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.PlayWaitLabel.Location = new System.Drawing.Point(892, 388);
+            this.PlayWaitLabel.Location = new System.Drawing.Point(535, 259);
+            this.PlayWaitLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.PlayWaitLabel.Name = "PlayWaitLabel";
-            this.PlayWaitLabel.Size = new System.Drawing.Size(244, 27);
+            this.PlayWaitLabel.Size = new System.Drawing.Size(162, 18);
             this.PlayWaitLabel.TabIndex = 30;
             this.PlayWaitLabel.Text = "再生待ち時間(フレーム数)：";
             // 
             // PlayWaitTextBox
             // 
             this.PlayWaitTextBox.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.PlayWaitTextBox.Location = new System.Drawing.Point(1172, 385);
+            this.PlayWaitTextBox.Location = new System.Drawing.Point(703, 257);
+            this.PlayWaitTextBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.PlayWaitTextBox.Name = "PlayWaitTextBox";
-            this.PlayWaitTextBox.Size = new System.Drawing.Size(71, 34);
+            this.PlayWaitTextBox.Size = new System.Drawing.Size(44, 25);
             this.PlayWaitTextBox.TabIndex = 29;
             this.PlayWaitTextBox.Text = "120";
             this.PlayWaitTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
@@ -358,9 +385,10 @@
             // StopMacroButton
             // 
             this.StopMacroButton.Font = new System.Drawing.Font("メイリオ", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.StopMacroButton.Location = new System.Drawing.Point(939, 480);
+            this.StopMacroButton.Location = new System.Drawing.Point(563, 320);
+            this.StopMacroButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.StopMacroButton.Name = "StopMacroButton";
-            this.StopMacroButton.Size = new System.Drawing.Size(308, 85);
+            this.StopMacroButton.Size = new System.Drawing.Size(185, 57);
             this.StopMacroButton.TabIndex = 31;
             this.StopMacroButton.Text = "停止";
             this.StopMacroButton.UseVisualStyleBackColor = true;
@@ -370,18 +398,20 @@
             // 
             this.MacroListLabel.AutoSize = true;
             this.MacroListLabel.Font = new System.Drawing.Font("メイリオ", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.MacroListLabel.Location = new System.Drawing.Point(42, 325);
+            this.MacroListLabel.Location = new System.Drawing.Point(25, 217);
+            this.MacroListLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.MacroListLabel.Name = "MacroListLabel";
-            this.MacroListLabel.Size = new System.Drawing.Size(135, 36);
+            this.MacroListLabel.Size = new System.Drawing.Size(90, 24);
             this.MacroListLabel.TabIndex = 32;
             this.MacroListLabel.Text = "マクロ一覧";
             // 
             // NewMacroButton
             // 
             this.NewMacroButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.NewMacroButton.Location = new System.Drawing.Point(789, 682);
+            this.NewMacroButton.Location = new System.Drawing.Point(473, 455);
+            this.NewMacroButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.NewMacroButton.Name = "NewMacroButton";
-            this.NewMacroButton.Size = new System.Drawing.Size(220, 46);
+            this.NewMacroButton.Size = new System.Drawing.Size(132, 31);
             this.NewMacroButton.TabIndex = 33;
             this.NewMacroButton.Text = "新規作成";
             this.NewMacroButton.UseVisualStyleBackColor = true;
@@ -391,9 +421,10 @@
             // 
             this.OverwriteSaveButton.Enabled = false;
             this.OverwriteSaveButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.OverwriteSaveButton.Location = new System.Drawing.Point(789, 818);
+            this.OverwriteSaveButton.Location = new System.Drawing.Point(473, 545);
+            this.OverwriteSaveButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.OverwriteSaveButton.Name = "OverwriteSaveButton";
-            this.OverwriteSaveButton.Size = new System.Drawing.Size(220, 46);
+            this.OverwriteSaveButton.Size = new System.Drawing.Size(132, 31);
             this.OverwriteSaveButton.TabIndex = 34;
             this.OverwriteSaveButton.Text = "上書き保存";
             this.OverwriteSaveButton.UseVisualStyleBackColor = true;
@@ -402,17 +433,19 @@
             // MacroNameLabel
             // 
             this.MacroNameLabel.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.MacroNameLabel.Location = new System.Drawing.Point(45, 597);
+            this.MacroNameLabel.Location = new System.Drawing.Point(27, 398);
+            this.MacroNameLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.MacroNameLabel.Name = "MacroNameLabel";
-            this.MacroNameLabel.Size = new System.Drawing.Size(695, 27);
+            this.MacroNameLabel.Size = new System.Drawing.Size(417, 18);
             this.MacroNameLabel.TabIndex = 35;
             // 
             // DebugMacroButton
             // 
             this.DebugMacroButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.DebugMacroButton.Location = new System.Drawing.Point(1027, 682);
+            this.DebugMacroButton.Location = new System.Drawing.Point(616, 455);
+            this.DebugMacroButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.DebugMacroButton.Name = "DebugMacroButton";
-            this.DebugMacroButton.Size = new System.Drawing.Size(220, 46);
+            this.DebugMacroButton.Size = new System.Drawing.Size(132, 31);
             this.DebugMacroButton.TabIndex = 36;
             this.DebugMacroButton.Text = "デバッグ";
             this.DebugMacroButton.UseVisualStyleBackColor = true;
@@ -422,9 +455,10 @@
             // 
             this.DeleteMicroButton.Enabled = false;
             this.DeleteMicroButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.DeleteMicroButton.Location = new System.Drawing.Point(789, 884);
+            this.DeleteMicroButton.Location = new System.Drawing.Point(473, 589);
+            this.DeleteMicroButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.DeleteMicroButton.Name = "DeleteMicroButton";
-            this.DeleteMicroButton.Size = new System.Drawing.Size(220, 46);
+            this.DeleteMicroButton.Size = new System.Drawing.Size(132, 31);
             this.DeleteMicroButton.TabIndex = 37;
             this.DeleteMicroButton.Text = "削除";
             this.DeleteMicroButton.UseVisualStyleBackColor = true;
@@ -434,9 +468,10 @@
             // 
             this.XAxisReverseCheckBox.AutoSize = true;
             this.XAxisReverseCheckBox.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.XAxisReverseCheckBox.Location = new System.Drawing.Point(861, 431);
+            this.XAxisReverseCheckBox.Location = new System.Drawing.Point(517, 287);
+            this.XAxisReverseCheckBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.XAxisReverseCheckBox.Name = "XAxisReverseCheckBox";
-            this.XAxisReverseCheckBox.Size = new System.Drawing.Size(110, 31);
+            this.XAxisReverseCheckBox.Size = new System.Drawing.Size(75, 22);
             this.XAxisReverseCheckBox.TabIndex = 38;
             this.XAxisReverseCheckBox.Text = "左右反転";
             this.XAxisReverseCheckBox.UseVisualStyleBackColor = true;
@@ -445,9 +480,10 @@
             // OpenMacroFolderButton
             // 
             this.OpenMacroFolderButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.OpenMacroFolderButton.Location = new System.Drawing.Point(1027, 884);
+            this.OpenMacroFolderButton.Location = new System.Drawing.Point(616, 589);
+            this.OpenMacroFolderButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.OpenMacroFolderButton.Name = "OpenMacroFolderButton";
-            this.OpenMacroFolderButton.Size = new System.Drawing.Size(220, 46);
+            this.OpenMacroFolderButton.Size = new System.Drawing.Size(132, 31);
             this.OpenMacroFolderButton.TabIndex = 39;
             this.OpenMacroFolderButton.Text = "フォルダを開く";
             this.OpenMacroFolderButton.UseVisualStyleBackColor = true;
@@ -456,9 +492,10 @@
             // RecSettingButton
             // 
             this.RecSettingButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.RecSettingButton.Location = new System.Drawing.Point(1027, 750);
+            this.RecSettingButton.Location = new System.Drawing.Point(616, 500);
+            this.RecSettingButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.RecSettingButton.Name = "RecSettingButton";
-            this.RecSettingButton.Size = new System.Drawing.Size(220, 46);
+            this.RecSettingButton.Size = new System.Drawing.Size(132, 31);
             this.RecSettingButton.TabIndex = 40;
             this.RecSettingButton.Text = "記録設定";
             this.RecSettingButton.UseVisualStyleBackColor = true;
@@ -468,9 +505,10 @@
             // 
             this.RecButton.Enabled = false;
             this.RecButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.RecButton.Location = new System.Drawing.Point(1027, 818);
+            this.RecButton.Location = new System.Drawing.Point(616, 545);
+            this.RecButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.RecButton.Name = "RecButton";
-            this.RecButton.Size = new System.Drawing.Size(220, 46);
+            this.RecButton.Size = new System.Drawing.Size(132, 31);
             this.RecButton.TabIndex = 41;
             this.RecButton.Text = "記録スタート";
             this.RecButton.UseVisualStyleBackColor = true;
@@ -494,17 +532,18 @@
             this.ControllerPanel.Controls.Add(this.BButton);
             this.ControllerPanel.Controls.Add(this.StartButton);
             this.ControllerPanel.Controls.Add(this.BackButton);
-            this.ControllerPanel.Location = new System.Drawing.Point(45, 28);
+            this.ControllerPanel.Location = new System.Drawing.Point(27, 19);
+            this.ControllerPanel.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.ControllerPanel.Name = "ControllerPanel";
-            this.ControllerPanel.Size = new System.Drawing.Size(938, 276);
+            this.ControllerPanel.Size = new System.Drawing.Size(563, 184);
             this.ControllerPanel.TabIndex = 42;
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(1289, 964);
+            this.ClientSize = new System.Drawing.Size(773, 643);
             this.Controls.Add(this.ControllerPanel);
             this.Controls.Add(this.RecButton);
             this.Controls.Add(this.RecSettingButton);
@@ -527,6 +566,8 @@
             this.Controls.Add(this.MacroEditTextBox);
             this.Controls.Add(this.PlayMacroButton);
             this.Controls.Add(this.MacroListBox);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Name = "MainForm";
             this.Text = "仮想コマンドコントローラー";
             this.Load += new System.EventHandler(this.Form1_Load);

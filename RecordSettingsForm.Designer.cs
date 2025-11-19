@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RecordSettingsForm));
             this.ControllerLabel = new System.Windows.Forms.Label();
             this.ButtonsLabel = new System.Windows.Forms.Label();
             this.LKButton = new System.Windows.Forms.Button();
@@ -56,9 +57,10 @@
             // 
             this.ControllerLabel.AutoSize = true;
             this.ControllerLabel.Font = new System.Drawing.Font("メイリオ", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.ControllerLabel.Location = new System.Drawing.Point(22, 32);
+            this.ControllerLabel.Location = new System.Drawing.Point(13, 21);
+            this.ControllerLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.ControllerLabel.Name = "ControllerLabel";
-            this.ControllerLabel.Size = new System.Drawing.Size(396, 33);
+            this.ControllerLabel.Size = new System.Drawing.Size(269, 23);
             this.ControllerLabel.TabIndex = 1;
             this.ControllerLabel.Text = "1. コントローラーを選択してください";
             // 
@@ -66,18 +68,20 @@
             // 
             this.ButtonsLabel.AutoSize = true;
             this.ButtonsLabel.Font = new System.Drawing.Font("メイリオ", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.ButtonsLabel.Location = new System.Drawing.Point(24, 307);
+            this.ButtonsLabel.Location = new System.Drawing.Point(14, 205);
+            this.ButtonsLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.ButtonsLabel.Name = "ButtonsLabel";
-            this.ButtonsLabel.Size = new System.Drawing.Size(792, 33);
+            this.ButtonsLabel.Size = new System.Drawing.Size(539, 23);
             this.ButtonsLabel.TabIndex = 2;
             this.ButtonsLabel.Text = "2. 各ボタンを押したあと割り当てるコントローラーのボタンを押してください";
             // 
             // LKButton
             // 
             this.LKButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.LKButton.Location = new System.Drawing.Point(25, 481);
+            this.LKButton.Location = new System.Drawing.Point(15, 321);
+            this.LKButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.LKButton.Name = "LKButton";
-            this.LKButton.Size = new System.Drawing.Size(125, 67);
+            this.LKButton.Size = new System.Drawing.Size(75, 45);
             this.LKButton.TabIndex = 21;
             this.LKButton.Text = "LK";
             this.LKButton.UseVisualStyleBackColor = true;
@@ -86,9 +90,10 @@
             // HKButton
             // 
             this.HKButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.HKButton.Location = new System.Drawing.Point(360, 481);
+            this.HKButton.Location = new System.Drawing.Point(216, 321);
+            this.HKButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.HKButton.Name = "HKButton";
-            this.HKButton.Size = new System.Drawing.Size(125, 67);
+            this.HKButton.Size = new System.Drawing.Size(75, 45);
             this.HKButton.TabIndex = 20;
             this.HKButton.Text = "HK";
             this.HKButton.UseVisualStyleBackColor = true;
@@ -97,9 +102,10 @@
             // MKButton
             // 
             this.MKButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.MKButton.Location = new System.Drawing.Point(191, 481);
+            this.MKButton.Location = new System.Drawing.Point(115, 321);
+            this.MKButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.MKButton.Name = "MKButton";
-            this.MKButton.Size = new System.Drawing.Size(125, 67);
+            this.MKButton.Size = new System.Drawing.Size(75, 45);
             this.MKButton.TabIndex = 19;
             this.MKButton.Text = "MK";
             this.MKButton.UseVisualStyleBackColor = true;
@@ -108,9 +114,10 @@
             // LPButton
             // 
             this.LPButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.LPButton.Location = new System.Drawing.Point(25, 354);
+            this.LPButton.Location = new System.Drawing.Point(15, 236);
+            this.LPButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.LPButton.Name = "LPButton";
-            this.LPButton.Size = new System.Drawing.Size(125, 67);
+            this.LPButton.Size = new System.Drawing.Size(75, 45);
             this.LPButton.TabIndex = 18;
             this.LPButton.Text = "LP";
             this.LPButton.UseVisualStyleBackColor = true;
@@ -119,9 +126,10 @@
             // HPButton
             // 
             this.HPButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.HPButton.Location = new System.Drawing.Point(360, 354);
+            this.HPButton.Location = new System.Drawing.Point(216, 236);
+            this.HPButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.HPButton.Name = "HPButton";
-            this.HPButton.Size = new System.Drawing.Size(125, 67);
+            this.HPButton.Size = new System.Drawing.Size(75, 45);
             this.HPButton.TabIndex = 17;
             this.HPButton.Text = "HP";
             this.HPButton.UseVisualStyleBackColor = true;
@@ -130,9 +138,10 @@
             // MPButton
             // 
             this.MPButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.MPButton.Location = new System.Drawing.Point(191, 354);
+            this.MPButton.Location = new System.Drawing.Point(115, 236);
+            this.MPButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.MPButton.Name = "MPButton";
-            this.MPButton.Size = new System.Drawing.Size(125, 67);
+            this.MPButton.Size = new System.Drawing.Size(75, 45);
             this.MPButton.TabIndex = 16;
             this.MPButton.Text = "MP";
             this.MPButton.UseVisualStyleBackColor = true;
@@ -142,9 +151,10 @@
             // 
             this.LPLabel.AutoSize = true;
             this.LPLabel.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.LPLabel.Location = new System.Drawing.Point(36, 433);
+            this.LPLabel.Location = new System.Drawing.Point(22, 289);
+            this.LPLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.LPLabel.Name = "LPLabel";
-            this.LPLabel.Size = new System.Drawing.Size(102, 27);
+            this.LPLabel.Size = new System.Drawing.Size(68, 18);
             this.LPLabel.TabIndex = 22;
             this.LPLabel.Text = "未割り当て";
             // 
@@ -152,9 +162,10 @@
             // 
             this.LKLabel.AutoSize = true;
             this.LKLabel.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.LKLabel.Location = new System.Drawing.Point(36, 563);
+            this.LKLabel.Location = new System.Drawing.Point(22, 375);
+            this.LKLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.LKLabel.Name = "LKLabel";
-            this.LKLabel.Size = new System.Drawing.Size(102, 27);
+            this.LKLabel.Size = new System.Drawing.Size(68, 18);
             this.LKLabel.TabIndex = 23;
             this.LKLabel.Text = "未割り当て";
             // 
@@ -162,9 +173,10 @@
             // 
             this.MPLabel.AutoSize = true;
             this.MPLabel.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.MPLabel.Location = new System.Drawing.Point(202, 433);
+            this.MPLabel.Location = new System.Drawing.Point(121, 289);
+            this.MPLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.MPLabel.Name = "MPLabel";
-            this.MPLabel.Size = new System.Drawing.Size(102, 27);
+            this.MPLabel.Size = new System.Drawing.Size(68, 18);
             this.MPLabel.TabIndex = 24;
             this.MPLabel.Text = "未割り当て";
             // 
@@ -172,9 +184,10 @@
             // 
             this.MKLabel.AutoSize = true;
             this.MKLabel.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.MKLabel.Location = new System.Drawing.Point(202, 563);
+            this.MKLabel.Location = new System.Drawing.Point(121, 375);
+            this.MKLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.MKLabel.Name = "MKLabel";
-            this.MKLabel.Size = new System.Drawing.Size(102, 27);
+            this.MKLabel.Size = new System.Drawing.Size(68, 18);
             this.MKLabel.TabIndex = 25;
             this.MKLabel.Text = "未割り当て";
             // 
@@ -182,9 +195,10 @@
             // 
             this.HPLabel.AutoSize = true;
             this.HPLabel.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.HPLabel.Location = new System.Drawing.Point(371, 433);
+            this.HPLabel.Location = new System.Drawing.Point(223, 289);
+            this.HPLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.HPLabel.Name = "HPLabel";
-            this.HPLabel.Size = new System.Drawing.Size(102, 27);
+            this.HPLabel.Size = new System.Drawing.Size(68, 18);
             this.HPLabel.TabIndex = 26;
             this.HPLabel.Text = "未割り当て";
             // 
@@ -192,9 +206,10 @@
             // 
             this.HKLabel.AutoSize = true;
             this.HKLabel.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.HKLabel.Location = new System.Drawing.Point(371, 563);
+            this.HKLabel.Location = new System.Drawing.Point(223, 375);
+            this.HKLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.HKLabel.Name = "HKLabel";
-            this.HKLabel.Size = new System.Drawing.Size(102, 27);
+            this.HKLabel.Size = new System.Drawing.Size(68, 18);
             this.HKLabel.TabIndex = 27;
             this.HKLabel.Text = "未割り当て";
             // 
@@ -202,41 +217,45 @@
             // 
             this.OKButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.OKButton.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.OKButton.Location = new System.Drawing.Point(433, 676);
+            this.OKButton.Location = new System.Drawing.Point(260, 451);
+            this.OKButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.OKButton.Name = "OKButton";
-            this.OKButton.Size = new System.Drawing.Size(165, 52);
+            this.OKButton.Size = new System.Drawing.Size(99, 35);
             this.OKButton.TabIndex = 29;
             this.OKButton.Text = "設定完了";
             this.OKButton.UseVisualStyleBackColor = true;
-            this.OKButton.Click += new System.EventHandler(this.OKButton_Click);;
+            this.OKButton.Click += new System.EventHandler(this.OKButton_Click);
             // 
             // ControllerComboBox
             // 
             this.ControllerComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.ControllerComboBox.Font = new System.Drawing.Font("メイリオ", 11F);
-            this.ControllerComboBox.Location = new System.Drawing.Point(22, 73);
+            this.ControllerComboBox.Location = new System.Drawing.Point(13, 49);
+            this.ControllerComboBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.ControllerComboBox.Name = "ControllerComboBox";
-            this.ControllerComboBox.Size = new System.Drawing.Size(998, 41);
+            this.ControllerComboBox.Size = new System.Drawing.Size(600, 31);
             this.ControllerComboBox.TabIndex = 31;
             this.ControllerComboBox.SelectedIndexChanged += new System.EventHandler(this.ControllerComboBox_SelectedIndexChanged);
             // 
             // LogTextBox
             // 
-            this.LogTextBox.Location = new System.Drawing.Point(22, 168);
+            this.LogTextBox.Location = new System.Drawing.Point(13, 112);
+            this.LogTextBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.LogTextBox.Multiline = true;
             this.LogTextBox.Name = "LogTextBox";
             this.LogTextBox.ReadOnly = true;
             this.LogTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.LogTextBox.Size = new System.Drawing.Size(869, 100);
+            this.LogTextBox.Size = new System.Drawing.Size(523, 68);
             this.LogTextBox.TabIndex = 32;
             // 
             // LogLabel
             // 
             this.LogLabel.AutoSize = true;
             this.LogLabel.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.LogLabel.Location = new System.Drawing.Point(20, 138);
+            this.LogLabel.Location = new System.Drawing.Point(12, 92);
+            this.LogLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.LogLabel.Name = "LogLabel";
-            this.LogLabel.Size = new System.Drawing.Size(84, 27);
+            this.LogLabel.Size = new System.Drawing.Size(56, 18);
             this.LogLabel.TabIndex = 33;
             this.LogLabel.Text = "操作ログ";
             // 
@@ -245,9 +264,11 @@
             this.OptionGroupBox.Controls.Add(this.F1Label);
             this.OptionGroupBox.Controls.Add(this.F1Button);
             this.OptionGroupBox.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.OptionGroupBox.Location = new System.Drawing.Point(567, 369);
+            this.OptionGroupBox.Location = new System.Drawing.Point(340, 246);
+            this.OptionGroupBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.OptionGroupBox.Name = "OptionGroupBox";
-            this.OptionGroupBox.Size = new System.Drawing.Size(388, 170);
+            this.OptionGroupBox.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.OptionGroupBox.Size = new System.Drawing.Size(233, 113);
             this.OptionGroupBox.TabIndex = 34;
             this.OptionGroupBox.TabStop = false;
             this.OptionGroupBox.Text = "ファンクションボタン（オプション）";
@@ -256,18 +277,20 @@
             // 
             this.F1Label.AutoSize = true;
             this.F1Label.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.F1Label.Location = new System.Drawing.Point(108, 123);
+            this.F1Label.Location = new System.Drawing.Point(65, 82);
+            this.F1Label.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.F1Label.Name = "F1Label";
-            this.F1Label.Size = new System.Drawing.Size(102, 27);
+            this.F1Label.Size = new System.Drawing.Size(68, 18);
             this.F1Label.TabIndex = 36;
             this.F1Label.Text = "未割り当て";
             // 
             // F1Button
             // 
             this.F1Button.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.F1Button.Location = new System.Drawing.Point(97, 44);
+            this.F1Button.Location = new System.Drawing.Point(58, 29);
+            this.F1Button.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.F1Button.Name = "F1Button";
-            this.F1Button.Size = new System.Drawing.Size(125, 67);
+            this.F1Button.Size = new System.Drawing.Size(75, 45);
             this.F1Button.TabIndex = 35;
             this.F1Button.Text = "F1";
             this.F1Button.UseVisualStyleBackColor = true;
@@ -275,10 +298,10 @@
             // 
             // RecordSettingsForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
-            this.ClientSize = new System.Drawing.Size(1048, 762);
+            this.ClientSize = new System.Drawing.Size(629, 508);
             this.Controls.Add(this.OptionGroupBox);
             this.Controls.Add(this.LogLabel);
             this.Controls.Add(this.LogTextBox);
@@ -298,6 +321,8 @@
             this.Controls.Add(this.ButtonsLabel);
             this.Controls.Add(this.ControllerLabel);
             this.Controls.Add(this.ControllerComboBox);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.Name = "RecordSettingsForm";
             this.Text = "記録設定";
             this.OptionGroupBox.ResumeLayout(false);

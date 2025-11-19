@@ -44,6 +44,9 @@ namespace VirtualController
         private List<Dictionary<string, string>> recordedFrames = new List<Dictionary<string, string>>();
         private DateTime recordStartTime;
 
+        // 追加: 保存後に優先選択するマクロ名（拡張子なし）
+        private string pendingSelectMacroName = null;
+
         /// <summary>
         /// 必要なデザイナー変数です。
         /// </summary>
@@ -115,6 +118,18 @@ namespace VirtualController
                 int idx = MacroListBox.Items.IndexOf(name);
                 if (idx >= 0)
                     MacroListBox.SetSelected(idx, true);
+            }
+
+            // 追加: pendingSelectMacroName があれば優先して選択（保存直後の非同期更新対策）
+            if (!string.IsNullOrEmpty(pendingSelectMacroName))
+            {
+                int idx = MacroListBox.Items.IndexOf(pendingSelectMacroName);
+                if (idx >= 0)
+                {
+                    MacroListBox.ClearSelected();
+                    MacroListBox.SetSelected(idx, true);
+                }
+                pendingSelectMacroName = null;
             }
         }
 
@@ -333,7 +348,7 @@ namespace VirtualController
                 OverwriteSaveButton.Enabled = false;
         }
 
-        // 保存ボタン押下時の処理
+        // 保存ボタン押下時の処理（変更部分のみ）
         private void SaveMacroButton_Click(object sender, EventArgs e)
         {
             string macroName = null;
@@ -349,7 +364,7 @@ namespace VirtualController
                 {
                     macroName = $"新規マクロ{idx}";
                     idx++;
-                } while (macroManager.GetMacroNames().Contains(macroName)); // 変更
+                } while (macroManager.GetMacroNames().Contains(macroName));
             }
             using (var sfd = new SaveFileDialog())
             {
@@ -358,9 +373,15 @@ namespace VirtualController
                 sfd.Filter = "CSVファイル (*.csv)|*.csv";
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
-                    macroManager.SaveMacro(Path.GetFileNameWithoutExtension(sfd.FileName), MacroEditTextBox.Text); // 変更
+                    var savedName = Path.GetFileNameWithoutExtension(sfd.FileName);
+                    macroManager.SaveMacro(savedName, MacroEditTextBox.Text);
+
+
+                    // マクロ一覧再読み込み
+                    pendingSelectMacroName = savedName;
                     LoadMacroList();
                     SaveAsButton.Enabled = false;
+                    
                 }
             }
         }
@@ -375,12 +396,26 @@ namespace VirtualController
                     OverwriteMacro();
                 }
             }
+
+            // マクロ選択を解除
+            MacroListBox.ClearSelected();
+
+            // 編集エリアを新規状態に
             MacroEditTextBox.Text = "";
             MacroEditTextBox.Enabled = true;
             editingMacroName = null;
             lastLoadedMacroText = "";
             OverwriteSaveButton.Enabled = false;
             SaveAsButton.Enabled = true;
+
+            // フォーカスを編集エリアへ移動し、キャレットを先頭に配置
+            this.ActiveControl = MacroEditTextBox;
+            MacroEditTextBox.SelectionStart = 0;
+            MacroEditTextBox.SelectionLength = 0;
+            MacroEditTextBox.Focus();
+
+            // 設定保存（選択状態が変わったため必要に応じて保存）
+            SaveMacroSettings();
         }
 
         private void OverwriteSaveButton_Click(object sender, EventArgs e)
@@ -404,10 +439,14 @@ namespace VirtualController
                     MacroEditTextBox.SelectionLength = 0;
                     MacroEditTextBox.SelectionStart = MacroEditTextBox.TextLength;
                 }));
+
+                // 追加: 上書き保存後に優先選択するマクロ名を設定
+                pendingSelectMacroName = editingMacroName;
             }
         }
 
-        // --- 設定保存: 複数選択対応（カンマ区切りで保存） ---
+        // 置き換え対象: 現在の SaveMacroSettings(...)
+        // 戻す内容（引数なし）
         private void SaveMacroSettings()
         {
             // 選択されているマクロ名を取得
