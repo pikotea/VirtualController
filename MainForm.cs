@@ -47,6 +47,9 @@ namespace VirtualController
         // 追加: 保存後に優先選択するマクロ名（拡張子なし）
         private string pendingSelectMacroName = null;
 
+        // 追加: FileSystemWatcher の自動リロードを一時抑止するフラグ
+        private volatile bool suppressWatcherEvents = false;
+
         /// <summary>
         /// 必要なデザイナー変数です。
         /// </summary>
@@ -231,6 +234,9 @@ namespace VirtualController
         // ファイル変更時のイベントハンドラ
         private void MacroFolderChanged(object sender, FileSystemEventArgs e)
         {
+            // 保存処理などで一時的にイベントを無視する
+            if (suppressWatcherEvents) return;
+
             // マクロ再生中なら停止
             if (isMacroPlaying)
             {
@@ -429,16 +435,25 @@ namespace VirtualController
             if (!string.IsNullOrEmpty(editingMacroName))
             {
                 string path = Path.Combine(macroFolder, editingMacroName + ".csv");
-                File.WriteAllText(path, MacroEditTextBox.Text, Encoding.UTF8);
-                lastLoadedMacroText = MacroEditTextBox.Text;
-                loadedMacro = MacroPlayer.MacroFrame.LoadMacroFile(path);
-                LoadMacroList(false);
-                OverwriteSaveButton.Enabled = false;
-                this.Invoke((Action)(() =>
+
+                try
                 {
-                    MacroEditTextBox.SelectionLength = 0;
-                    MacroEditTextBox.SelectionStart = MacroEditTextBox.TextLength;
-                }));
+                    suppressWatcherEvents = true; // ← イベント抑止
+                    File.WriteAllText(path, MacroEditTextBox.Text, Encoding.UTF8);
+                    lastLoadedMacroText = MacroEditTextBox.Text;
+                    loadedMacro = MacroPlayer.MacroFrame.LoadMacroFile(path);
+                    LoadMacroList(false);
+                    OverwriteSaveButton.Enabled = false;
+                    this.Invoke((Action)(() =>
+                    {
+                        MacroEditTextBox.SelectionLength = 0;
+                        MacroEditTextBox.SelectionStart = MacroEditTextBox.TextLength;
+                    }));
+                }
+                finally
+                {
+                    suppressWatcherEvents = false; // ← 必ず解除
+                }
 
                 // 追加: 上書き保存後に優先選択するマクロ名を設定
                 pendingSelectMacroName = editingMacroName;
