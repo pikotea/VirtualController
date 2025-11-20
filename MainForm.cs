@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using VirtualController;
+using System.Reflection;
 
 
 namespace VirtualController
@@ -18,7 +18,7 @@ namespace VirtualController
     public partial class MainForm : Form
     {
         int frame = 16;
-        string macroFolder = Path.Combine(Application.StartupPath, "micros");
+        string macroFolder = Path.Combine(Application.StartupPath, "macros");
         List<MacroPlayer.MacroFrame> loadedMacro = new List<MacroPlayer.MacroFrame>();
         FileSystemWatcher macroWatcher;
 
@@ -73,6 +73,9 @@ namespace VirtualController
         // --- コンストラクタで自動接続 ---
         public MainForm()
         {
+            // 起動時にマイグレーションを実行
+            RunMigrationsIfNeeded();
+
             InitializeComponent();
             controllerService = new ControllerService();
             controllerService.Connect(); // ← 起動時に自動接続
@@ -80,6 +83,38 @@ namespace VirtualController
             macroPlayer = new MacroPlayer(controllerService, macroFolder);
             StartMacroFolderWatcher();
             LoadMacroList();
+
+        }
+
+        private void RunMigrationsIfNeeded()
+        {
+            try
+            {
+                // 現在の実行アセンブリとロード済みアセンブリを検索して IMigration を実装する型を見つける
+                var types = AppDomain.CurrentDomain.GetAssemblies()
+                    .SelectMany(a =>
+                    {
+                        try { return a.GetTypes(); }
+                        catch (ReflectionTypeLoadException ex) { return ex.Types.Where(t => t != null); }
+                        catch { return Array.Empty<Type>(); }
+                    });
+
+                var migrations = types
+                    .Where(t => typeof(IMigration).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract)
+                    .Select(t => (IMigration)Activator.CreateInstance(t))
+                    .OrderBy(m => m.Id)
+                    .ToList();
+
+                if (migrations.Count > 0)
+                {
+                    MigrationRunner.RunMigrations(migrations);
+                }
+            }
+            catch (Exception ex)
+            {
+                // 任意: ログ出力やユーザー通知を行う（ここでは例外を無視して起動継続）
+                System.Diagnostics.Trace.TraceWarning("マイグレーション実行中に例外: " + ex.Message);
+            }
         }
 
         // --- 1. 起動時（Form1_Load）で設定ファイルを読み込む ---

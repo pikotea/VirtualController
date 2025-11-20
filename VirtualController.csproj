@@ -61,6 +61,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ControllerService.cs" />
+    <Compile Include="MigrationRunner.cs" />
+    <Compile Include="migrations\IMigration.cs" />
+    <Compile Include="migrations\Migration_0001_MicrosToMacros.cs" />
     <Compile Include="RecordSettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
