@@ -473,7 +473,9 @@ namespace VirtualController
 
                 try
                 {
-                    suppressWatcherEvents = true; // ← イベント抑止
+                    suppressWatcherEvents = true;
+                    pendingSelectMacroName = editingMacroName;  // 上書き保存後に優先選択するマクロ名を設定
+
                     File.WriteAllText(path, MacroEditTextBox.Text, Encoding.UTF8);
                     lastLoadedMacroText = MacroEditTextBox.Text;
                     loadedMacro = MacroPlayer.MacroFrame.LoadMacroFile(path);
@@ -489,9 +491,6 @@ namespace VirtualController
                 {
                     suppressWatcherEvents = false; // ← 必ず解除
                 }
-
-                // 追加: 上書き保存後に優先選択するマクロ名を設定
-                pendingSelectMacroName = editingMacroName;
             }
         }
 
