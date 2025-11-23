@@ -1,12 +1,11 @@
 using Nefarius.ViGEm.Client.Targets.Xbox360;
-using Nefarius.ViGEm.Client; // IXbox360Controller の定義元
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace VirtualController
 {
@@ -41,130 +40,155 @@ namespace VirtualController
         {
             await Task.Run(() =>
             {
+                // 高分解能タイマーを使用開始（内部で参照カウント管理）
+                TimingHelpers.BeginHighResolution();
+
+                // 再生中はスレッド優先度を一時的に上げる（注意: 短時間に限定）
+                var currentThread = Thread.CurrentThread;
+                var originalPriority = currentThread.Priority;
                 try
                 {
-                    do
+                    currentThread.Priority = ThreadPriority.Highest;
+
+                    try
                     {
-                        double totalWaitMs = playWaitFrames * frameMs;
-                        if (totalWaitMs > 0)
+                        do
                         {
-                            if (token.IsCancellationRequested) break;
-                            Thread.Sleep((int)totalWaitMs);
-                        }
-
-                        string innerMacroName = null;
-                        if (isRandom && macroNames.Count > 0)
-                        {
-                            var rand = new Random();
-                            innerMacroName = macroNames[rand.Next(macroNames.Count)];
-                        }
-                        else if (macroNames.Count > 0)
-                        {
-                            innerMacroName = macroNames[0];
-                        }
-
-                        if (string.IsNullOrEmpty(innerMacroName)) break;
-
-                        string path = Path.Combine(macroFolder, innerMacroName + ".csv");
-                        var frameArray = MacroFrame.ParseToFrameArray(path);
-                        var keyState = new MacroKeyState();
-
-                        int i = 0;
-                        var sw = System.Diagnostics.Stopwatch.StartNew();
-                        double nextFrameTime = sw.Elapsed.TotalMilliseconds;
-                        while (i < frameArray.Count)
-                        {
-                            if (token.IsCancellationRequested) break;
-
-                            int waitCount = 0;
-                            while (i < frameArray.Count && frameArray[i].Count == 0)
+                            double totalWaitMs = playWaitFrames * frameMs;
+                            if (totalWaitMs > 0)
                             {
-                                waitCount++;
+                                if (token.IsCancellationRequested) break;
+                                // 従来互換で単純待機（短時間の待機はハイブリッド待機を使わない）
+                                Thread.Sleep((int)totalWaitMs);
+                            }
+
+                            string innerMacroName = null;
+                            if (isRandom && macroNames.Count > 0)
+                            {
+                                var rand = new Random();
+                                innerMacroName = macroNames[rand.Next(macroNames.Count)];
+                            }
+                            else if (macroNames.Count > 0)
+                            {
+                                innerMacroName = macroNames[0];
+                            }
+
+                            if (string.IsNullOrEmpty(innerMacroName)) break;
+
+                            string path = Path.Combine(macroFolder, innerMacroName + ".csv");
+                            var frameArray = MacroFrame.ParseToFrameArray(path);
+                            var keyState = new MacroKeyState();
+
+                            int i = 0;
+                            var sw = Stopwatch.StartNew();
+                            double nextFrameTime = sw.Elapsed.TotalMilliseconds;
+
+                            // 計測用
+                            double maxJitterMs = 0;
+                            double sumAbsJitter = 0;
+                            long sampleCount = 0;
+
+                            while (i < frameArray.Count)
+                            {
+                                if (token.IsCancellationRequested) break;
+
+                                int waitCount = 0;
+                                while (i < frameArray.Count && frameArray[i].Count == 0)
+                                {
+                                    waitCount++;
+                                    i++;
+                                }
+                                if (waitCount > 0)
+                                {
+                                    nextFrameTime += waitCount * frameMs;
+                                    TimingHelpers.WaitUntil(sw, nextFrameTime, token);
+                                    continue;
+                                }
+
+                                var frameDict = frameArray[i];
+                                foreach (var kv in frameDict)
+                                {
+                                    string key = kv.Key.ToUpper();
+                                    string val = kv.Value.ToUpper();
+                                    // --- エイリアス対応 ---
+                                    if (key == "LP") key = "X";
+                                    else if (key == "LK") key = "A";
+                                    else if (key == "MP") key = "Y";
+                                    else if (key == "MK") key = "B";
+                                    else if (key == "HP") key = "RB";
+                                    else if (key == "HK") key = "LB";
+                                    if (val == "ON")
+                                        keyState.KeyStates[key] = true;
+                                    else if (val == "OFF")
+                                        keyState.KeyStates[key] = false;
+                                }
+
+                                short y = 0, x = 0;
+                                if (keyState.KeyStates["UP"] && !keyState.KeyStates["DOWN"]) y = short.MaxValue;
+                                else if (keyState.KeyStates["DOWN"] && !keyState.KeyStates["UP"]) y = short.MinValue;
+
+                                bool reverse = xAxisReverse;
+                                // 必要ならInvokeでUIから取得
+                                // this.Invoke((Action)(() => { reverse = XAxisReverseCheckBox.Checked; }));
+
+                                if (!reverse)
+                                {
+                                    if (keyState.KeyStates["LEFT"] && !keyState.KeyStates["RIGHT"]) x = short.MinValue;
+                                    else if (keyState.KeyStates["RIGHT"] && !keyState.KeyStates["LEFT"]) x = short.MaxValue;
+                                }
+                                else
+                                {
+                                    if (keyState.KeyStates["LEFT"] && !keyState.KeyStates["RIGHT"]) x = short.MaxValue;
+                                    else if (keyState.KeyStates["RIGHT"] && !keyState.KeyStates["LEFT"]) x = short.MinValue;
+                                }
+
+                                // 軸・ボタンを直接コントローラーに反映
+                                controllerService.Controller.SetAxisValue(Xbox360Axis.LeftThumbY, y);
+                                controllerService.Controller.SetAxisValue(Xbox360Axis.LeftThumbX, x);
+
+                                controllerService.Controller.SetButtonState(Xbox360Button.A, keyState.KeyStates["A"]);
+                                controllerService.Controller.SetButtonState(Xbox360Button.B, keyState.KeyStates["B"]);
+                                controllerService.Controller.SetButtonState(Xbox360Button.X, keyState.KeyStates["X"]);
+                                controllerService.Controller.SetButtonState(Xbox360Button.Y, keyState.KeyStates["Y"]);
+                                controllerService.Controller.SetButtonState(Xbox360Button.LeftShoulder, keyState.KeyStates["LB"]);
+                                controllerService.Controller.SetButtonState(Xbox360Button.RightShoulder, keyState.KeyStates["RB"]);
+
+                                // 次フレーム予定時刻を更新してハイブリッドで待機
+                                nextFrameTime += frameMs;
+                                TimingHelpers.WaitUntil(sw, nextFrameTime, token);
+
+                                // 計測: 実際到達時刻と予定時刻の差を記録（ミリ秒）
+                                double actual = sw.Elapsed.TotalMilliseconds;
+                                double jitter = actual - nextFrameTime;
+                                sumAbsJitter += Math.Abs(jitter);
+                                if (Math.Abs(jitter) > maxJitterMs) maxJitterMs = Math.Abs(jitter);
+                                sampleCount++;
+
                                 i++;
                             }
-                            if (waitCount > 0)
+                            if (i == frameArray.Count)
                             {
-                                nextFrameTime += waitCount * frameMs;
-                                while (sw.Elapsed.TotalMilliseconds < nextFrameTime)
-                                {
-                                    if (token.IsCancellationRequested) break;
-                                    Thread.Sleep(1);
-                                }
-                                continue;
+                                nextFrameTime += frameMs;
+                                TimingHelpers.WaitUntil(sw, nextFrameTime, token);
                             }
+                            controllerService.AllOff();
 
-                            var frameDict = frameArray[i];
-                            foreach (var kv in frameDict)
-                            {
-                                string key = kv.Key.ToUpper();
-                                string val = kv.Value.ToUpper();
-                                // --- エイリアス対応 ---
-                                if (key == "LP") key = "X";
-                                else if (key == "LK") key = "A";
-                                else if (key == "MP") key = "Y";
-                                else if (key == "MK") key = "B";
-                                else if (key == "HP") key = "RB";
-                                else if (key == "HK") key = "LB";
-                                if (val == "ON")
-                                    keyState.KeyStates[key] = true;
-                                else if (val == "OFF")
-                                    keyState.KeyStates[key] = false;
-                            }
-
-                            short y = 0, x = 0;
-                            if (keyState.KeyStates["UP"] && !keyState.KeyStates["DOWN"]) y = short.MaxValue;
-                            else if (keyState.KeyStates["DOWN"] && !keyState.KeyStates["UP"]) y = short.MinValue;
-
-                            bool reverse = xAxisReverse;
-                            // 必要ならInvokeでUIから取得
-                            // this.Invoke((Action)(() => { reverse = XAxisReverseCheckBox.Checked; }));
-
-                            if (!reverse)
-                            {
-                                if (keyState.KeyStates["LEFT"] && !keyState.KeyStates["RIGHT"]) x = short.MinValue;
-                                else if (keyState.KeyStates["RIGHT"] && !keyState.KeyStates["LEFT"]) x = short.MaxValue;
-                            }
-                            else
-                            {
-                                if (keyState.KeyStates["LEFT"] && !keyState.KeyStates["RIGHT"]) x = short.MaxValue;
-                                else if (keyState.KeyStates["RIGHT"] && !keyState.KeyStates["LEFT"]) x = short.MinValue;
-                            }
-
-                            // 軸・ボタンを直接コントローラーに反映
-                            controllerService.Controller.SetAxisValue(Xbox360Axis.LeftThumbY, y);
-                            controllerService.Controller.SetAxisValue(Xbox360Axis.LeftThumbX, x);
-
-                            controllerService.Controller.SetButtonState(Xbox360Button.A, keyState.KeyStates["A"]);
-                            controllerService.Controller.SetButtonState(Xbox360Button.B, keyState.KeyStates["B"]);
-                            controllerService.Controller.SetButtonState(Xbox360Button.X, keyState.KeyStates["X"]);
-                            controllerService.Controller.SetButtonState(Xbox360Button.Y, keyState.KeyStates["Y"]);
-                            controllerService.Controller.SetButtonState(Xbox360Button.LeftShoulder, keyState.KeyStates["LB"]);
-                            controllerService.Controller.SetButtonState(Xbox360Button.RightShoulder, keyState.KeyStates["RB"]);
-
-                            nextFrameTime += frameMs;
-                            while (sw.Elapsed.TotalMilliseconds < nextFrameTime)
-                            {
-                                if (token.IsCancellationRequested) break;
-                                Thread.Sleep(1);
-                            }
-                            i++;
-                        }
-                        if (i == frameArray.Count)
-                        {
-                            nextFrameTime += frameMs;
-                            while (sw.Elapsed.TotalMilliseconds < nextFrameTime)
-                            {
-                                if (token.IsCancellationRequested) break;
-                                Thread.Sleep(1);
-                            }
-                        }
-                        controllerService.AllOff();
-                    } while (isRepeat && !token.IsCancellationRequested);
+                            // 計測結果をログ出力（デバッグ）
+                            if (sampleCount > 0)
+                                Debug.WriteLine($"[MacroPlayer] timing samples={sampleCount}, maxJitterMs={maxJitterMs:F3}, avgAbsJitterMs={(sumAbsJitter / sampleCount):F3}");
+                        } while (isRepeat && !token.IsCancellationRequested);
+                    }
+                    finally
+                    {
+                        // UIを元に戻す
+                        // UIスレッドでInvokeする必要がある場合は呼び出し元で対応
+                    }
                 }
                 finally
                 {
-                    // UIを元に戻す
-                    // UIスレッドでInvokeする必要がある場合は呼び出し元で対応
+                    // 優先度と高分解能タイマーを元に戻す
+                    try { currentThread.Priority = originalPriority; } catch { }
+                    TimingHelpers.EndHighResolution();
                 }
             }, token);
         }
