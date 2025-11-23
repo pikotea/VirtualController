@@ -36,20 +36,26 @@ namespace VirtualController
             bool isRandom,
             bool xAxisReverse,
             int frame,
-            CancellationToken token)
+            CancellationToken token,
+            bool manageTiming = true)
         {
             await Task.Run(() =>
             {
-                // 高分解能タイマーを使用開始（内部で参照カウント管理）
-                TimingHelpers.BeginHighResolution();
+                Thread currentThread = null;
+                ThreadPriority originalPriority = ThreadPriority.Normal;
+                if (manageTiming)
+                {
+                    // 高分解能タイマーを使用開始（内部で参照カウント管理）
+                    TimingHelpers.BeginHighResolution();
 
-                // 再生中はスレッド優先度を一時的に上げる（注意: 短時間に限定）
-                var currentThread = Thread.CurrentThread;
-                var originalPriority = currentThread.Priority;
+                    // 再生中はスレッド優先度を一時的に上げる（注意: 短時間に限定）
+                    currentThread = Thread.CurrentThread;
+                    originalPriority = currentThread.Priority;
+                    currentThread.Priority = ThreadPriority.Highest;
+                }
+
                 try
                 {
-                    currentThread.Priority = ThreadPriority.Highest;
-
                     try
                     {
                         do
@@ -128,8 +134,6 @@ namespace VirtualController
                                 else if (keyState.KeyStates["DOWN"] && !keyState.KeyStates["UP"]) y = short.MinValue;
 
                                 bool reverse = xAxisReverse;
-                                // 必要ならInvokeでUIから取得
-                                // this.Invoke((Action)(() => { reverse = XAxisReverseCheckBox.Checked; }));
 
                                 if (!reverse)
                                 {
@@ -186,9 +190,12 @@ namespace VirtualController
                 }
                 finally
                 {
-                    // 優先度と高分解能タイマーを元に戻す
-                    try { currentThread.Priority = originalPriority; } catch { }
-                    TimingHelpers.EndHighResolution();
+                    // 優先度と高分解能タイマーを元に戻す（manageTiming=true の場合のみ）
+                    if (manageTiming)
+                    {
+                        try { if (currentThread != null) currentThread.Priority = originalPriority; } catch { }
+                        TimingHelpers.EndHighResolution();
+                    }
                 }
             }, token);
         }
@@ -204,7 +211,8 @@ namespace VirtualController
             int frame,
             CancellationToken token,
             SharpDX.DirectInput.Joystick joystick = null,
-            RecordSettingsForm.RecordSettingsConfig recordConfig = null)
+            RecordSettingsForm.RecordSettingsConfig recordConfig = null,
+            bool manageTiming = true)
         {
             var macroTriggers = new List<(string macroName, List<string> triggers, List<string> waitActions)>();
             foreach (var macroName in macroNames)
@@ -279,7 +287,8 @@ namespace VirtualController
                     isRandom,
                     xAxisReverse,
                     frame,
-                    token
+                    token,
+                    manageTiming
                 );
                 return;
             }
@@ -298,13 +307,18 @@ namespace VirtualController
             // 高精度ループに変更：Task.Run 内で高分解能タイマーとスレッド優先度を使用
             await Task.Run(async () =>
             {
-                TimingHelpers.BeginHighResolution();
-                var currentThread = Thread.CurrentThread;
-                var originalPriority = currentThread.Priority;
+                Thread currentThread = null;
+                ThreadPriority originalPriority = ThreadPriority.Normal;
+                if (manageTiming)
+                {
+                    TimingHelpers.BeginHighResolution();
+                    currentThread = Thread.CurrentThread;
+                    originalPriority = currentThread.Priority;
+                    currentThread.Priority = ThreadPriority.Highest;
+                }
+
                 try
                 {
-                    currentThread.Priority = ThreadPriority.Highest;
-
                     var sw = Stopwatch.StartNew();
                     double nextFrameTime = sw.Elapsed.TotalMilliseconds;
 
@@ -396,10 +410,10 @@ namespace VirtualController
                             {
                                 controllerService.AllOff();
                                 System.Diagnostics.Debug.WriteLine("[MacroPlayer] PlayAsync(ジョイスティック/設定付き) 実行");
-                                // ネストして再生（非同期 await）
+                                // ネストして再生（manageTiming=false を渡して Begin/End/Priority の重複を回避）
                                 await PlayAsync(
                                     triggerdMacros,
-                                    frameMs, 0, false, isRandom, xAxisReverse, frame, token
+                                    frameMs, 0, false, isRandom, xAxisReverse, frame, token, false
                                 );
                                 triggered = true;
                             }
@@ -412,8 +426,11 @@ namespace VirtualController
                 }
                 finally
                 {
-                    try { currentThread.Priority = originalPriority; } catch { }
-                    TimingHelpers.EndHighResolution();
+                    if (manageTiming)
+                    {
+                        try { if (currentThread != null) currentThread.Priority = originalPriority; } catch { }
+                        TimingHelpers.EndHighResolution();
+                    }
                 }
             }, token);
             return;
