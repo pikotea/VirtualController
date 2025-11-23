@@ -28,6 +28,7 @@ namespace VirtualController
         }
 
         // PlayAsync の Task.Run 内部を元の仕様に合わせて修正
+        // 先に全マクロを読み込み・パースしてから Task.Run に渡す（ネスト再生時に再読み込みしない）
         public async Task PlayAsync(
             List<string> macroNames,
             double frameMs,
@@ -37,8 +38,27 @@ namespace VirtualController
             bool xAxisReverse,
             int frame,
             CancellationToken token,
-            bool manageTiming = true)
+            bool manageTiming = true,
+            Dictionary<string, List<Dictionary<string, string>>> preParsed = null)
         {
+            // 先に必要なマクロをすべて読み込み・パースしておく（重複はまとめる）
+            var parsedMacros = preParsed ?? new Dictionary<string, List<Dictionary<string, string>>>(StringComparer.OrdinalIgnoreCase);
+            if (preParsed == null)
+            {
+                foreach (var name in macroNames.Distinct(StringComparer.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        var path = Path.Combine(macroFolder, name + ".csv");
+                        parsedMacros[name] = MacroFrame.ParseToFrameArray(path);
+                    }
+                    catch
+                    {
+                        // ファイル読み込み失敗は無視しておく（呼び出し元でログ化されている想定）
+                    }
+                }
+            }
+
             await Task.Run(() =>
             {
                 Thread currentThread = null;
@@ -81,8 +101,22 @@ namespace VirtualController
 
                             if (string.IsNullOrEmpty(innerMacroName)) break;
 
-                            string path = Path.Combine(macroFolder, innerMacroName + ".csv");
-                            var frameArray = MacroFrame.ParseToFrameArray(path);
+                            // ここでは事前にパース済みデータを使う（なければフォールバックしてパース）
+                            List<Dictionary<string, string>> frameArray = null;
+                            if (!parsedMacros.TryGetValue(innerMacroName, out frameArray))
+                            {
+                                try
+                                {
+                                    var path = Path.Combine(macroFolder, innerMacroName + ".csv");
+                                    frameArray = MacroFrame.ParseToFrameArray(path);
+                                    parsedMacros[innerMacroName] = frameArray;
+                                }
+                                catch
+                                {
+                                    frameArray = new List<Dictionary<string, string>>();
+                                }
+                            }
+
                             var keyState = new MacroKeyState();
 
                             int i = 0;
@@ -201,6 +235,7 @@ namespace VirtualController
         }
 
         // PlayAsyncの引数にジョイスティックと設定を追加
+        // ここでも先にすべてのマクロを読み込み・パースしておく（トリガー解析と再生で再利用）
         public async Task PlayAsync(
             List<string> macroNames,
             double frameMs,
@@ -212,9 +247,29 @@ namespace VirtualController
             CancellationToken token,
             SharpDX.DirectInput.Joystick joystick = null,
             RecordSettingsForm.RecordSettingsConfig recordConfig = null,
-            bool manageTiming = true)
+            bool manageTiming = true,
+            Dictionary<string, List<Dictionary<string, string>>> preParsed = null)
         {
             var macroTriggers = new List<(string macroName, List<string> triggers, List<string> waitActions)>();
+
+            // 事前に全マクロをパース（必要に応じてフォールバック）
+            var parsedMacros = preParsed ?? new Dictionary<string, List<Dictionary<string, string>>>(StringComparer.OrdinalIgnoreCase);
+            if (preParsed == null)
+            {
+                foreach (var name in macroNames.Distinct(StringComparer.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        var path = Path.Combine(macroFolder, name + ".csv");
+                        parsedMacros[name] = MacroFrame.ParseToFrameArray(path);
+                    }
+                    catch
+                    {
+                        // 無視
+                    }
+                }
+            }
+
             foreach (var macroName in macroNames)
             {
                 var macroText = File.ReadAllText(Path.Combine(macroFolder, macroName + ".csv"));
@@ -288,7 +343,8 @@ namespace VirtualController
                     xAxisReverse,
                     frame,
                     token,
-                    manageTiming
+                    manageTiming,
+                    parsedMacros // 事前パース済みを渡す
                 );
                 return;
             }
@@ -410,16 +466,25 @@ namespace VirtualController
                             {
                                 controllerService.AllOff();
                                 System.Diagnostics.Debug.WriteLine("[MacroPlayer] PlayAsync(ジョイスティック/設定付き) 実行");
+
+                                // parsedMacros からトリガー対象のパース済みデータを抽出して渡す（ネスト再生で再読み込みしない）
+                                var parsedSubset = new Dictionary<string, List<Dictionary<string, string>>>(StringComparer.OrdinalIgnoreCase);
+                                foreach (var nm in triggerdMacros)
+                                {
+                                    if (parsedMacros.TryGetValue(nm, out var arr))
+                                        parsedSubset[nm] = arr;
+                                }
+
                                 // ネストして再生（manageTiming=false を渡して Begin/End/Priority の重複を回避）
                                 await PlayAsync(
                                     triggerdMacros,
-                                    frameMs, 0, false, isRandom, xAxisReverse, frame, token, false
+                                    frameMs, 0, false, isRandom, xAxisReverse, frame, token, false, parsedSubset
                                 );
                                 triggered = true;
                             }
 
                             // 次チェックまで高精度で待機（frameMs に同期）
-                            nextFrameTime += frameMs / 2;
+                            nextFrameTime += frameMs / 3;
                             TimingHelpers.WaitUntil(sw, nextFrameTime, token);
                         }
                     }
