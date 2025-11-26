@@ -74,6 +74,8 @@ namespace VirtualController
             controller.SetButtonState(Xbox360Button.Y, false);
             controller.SetButtonState(Xbox360Button.LeftShoulder, false);
             controller.SetButtonState(Xbox360Button.RightShoulder, false);
+            controller.SetSliderValue(Xbox360Slider.LeftTrigger, 0);
+            controller.SetSliderValue(Xbox360Slider.RightTrigger, 0);
         }
     }
 }

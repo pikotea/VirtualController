@@ -17,7 +17,6 @@ namespace VirtualController
 {
     public partial class MainForm : Form
     {
-        int frame = 16;
         string macroFolder = Path.Combine(Application.StartupPath, "macros");
         List<MacroPlayer.MacroFrame> loadedMacro = new List<MacroPlayer.MacroFrame>();
         FileSystemWatcher macroWatcher;
@@ -228,7 +227,6 @@ namespace VirtualController
                         isRepeat,
                         isRandom,
                         XAxisReverseCheckBox.Checked,
-                        frame,
                         token,
                         currentJoystick,
                         recordConfig
@@ -304,10 +302,6 @@ namespace VirtualController
                 {
                     btn.Enabled = isMacroPlaying;
                 }
-                else if (btn.Name == "DebugMacroButton")
-                {
-                    btn.Enabled = MacroListBox.SelectedItems.Count > 0;
-                }
                 else if (btn.Name == "OpenMacroFolderButton")
                 {
                     btn.Enabled = true;
@@ -367,11 +361,6 @@ namespace VirtualController
             OverwriteSaveButton.Enabled = false;
 
             PlayMacroButton.Enabled = MacroListBox.SelectedItems.Count > 0;
-
-            DeleteMicroButton.Enabled = MacroListBox.SelectedItems.Count > 0;
-
-            // デバッグボタンの有効化条件を変更
-            DebugMacroButton.Enabled = MacroListBox.SelectedItems.Count > 0;
 
             SaveMacroSettings();
         }
@@ -590,106 +579,6 @@ namespace VirtualController
         {
             StopMacroIfPlaying();
             SaveMacroSettings();
-        }
-
-        // --- DebugMacroButton_Click 内のマクロデータ表示処理を MacroPlayer に統一 ---
-        private void DebugMacroButton_Click(object sender, EventArgs e)
-        {
-            if (MacroListBox.SelectedItems.Count == 0)
-            {
-                MessageBox.Show("マクロが選択されていません。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            string macroName = MacroListBox.SelectedItems[0] as string;
-            if (string.IsNullOrEmpty(macroName)) return;
-
-            // MacroPlayerのParseToFrameArrayを利用
-            var frameArray = macroPlayer.ParseToFrameArray(macroName);
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"マクロ名: {macroName}");
-            sb.AppendLine($"フレーム数: {frameArray.Count}");
-            for (int i = 0; i < frameArray.Count; i++)
-            {
-                sb.Append($"[{i + 1}] ");
-                if (frameArray[i].Count == 0)
-                {
-                    sb.AppendLine("(WAIT)");
-                }
-                else
-                {
-                    foreach (var kv in frameArray[i])
-                    {
-                        sb.Append($"{kv.Key}={kv.Value} ");
-                    }
-                    sb.AppendLine();
-                }
-            }
-
-            // 結果表示
-            var debugForm = new Form
-            {
-                Text = "フレームデータ",
-                Width = 600,
-                Height = 400
-            };
-            var textBox = new TextBox
-            {
-                Multiline = true,
-                ReadOnly = true,
-                Dock = DockStyle.Fill,
-                ScrollBars = ScrollBars.Both,
-                Text = sb.ToString()
-            };
-            debugForm.Controls.Add(textBox);
-
-            var copyButton = new Button
-            {
-                Text = "コピー",
-                Dock = DockStyle.Bottom,
-                Height = 40
-            };
-            copyButton.Click += (s, ev) =>
-            {
-                Clipboard.SetText(textBox.Text);
-                MessageBox.Show("クリップボードにコピーしました。", "コピー", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            };
-            debugForm.Controls.Add(copyButton);
-
-            debugForm.ShowDialog();
-        }
-
-        // 6. マクロ削除
-        private void DeleteMicroButton_Click(object sender, EventArgs e)
-        {
-            if (MacroListBox.SelectedItems.Count == 0)
-            {
-                MessageBox.Show("削除するマクロが選択されていません。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            string macroName = MacroListBox.SelectedItems[0] as string;
-            if (string.IsNullOrEmpty(macroName)) return;
-
-            var result = MessageBox.Show(
-                $"マクロ「{macroName}」を削除しますか？\nこの操作は元に戻せません。",
-                "確認",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning);
-
-            if (result == DialogResult.Yes)
-            {
-                macroManager.DeleteMacro(macroName); // 変更
-                LoadMacroList();
-                DeleteMicroButton.Enabled = false;
-                // 削除されたマクロの内容をクリア
-                MacroEditTextBox.Text = "";
-                MacroNameLabel.Text = "";
-                editingMacroName = null;
-                lastLoadedMacroText = "";
-                MessageBox.Show("マクロを削除しました。", "削除完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
         }
 
         /// <summary>
@@ -981,6 +870,27 @@ namespace VirtualController
             controllerService.SetInputs(
                 null,
                 new Dictionary<Xbox360Button, bool> { { Xbox360Button.Back, false } });
+        }
+        // LT（左トリガー）
+        private void LTButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            // 0〜255。押下で最大値にする
+            controllerService.Controller.SetSliderValue(Xbox360Slider.LeftTrigger, byte.MaxValue);
+        }
+        private void LTButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            // 離したら0に戻す
+            controllerService.Controller.SetSliderValue(Xbox360Slider.LeftTrigger, 0);
+        }
+
+        // RT（右トリガー）
+        private void RTButton_MouseDown(object sender, MouseEventArgs e)
+        {
+            controllerService.Controller.SetSliderValue(Xbox360Slider.RightTrigger, byte.MaxValue);
+        }
+        private void RTButton_MouseUp(object sender, MouseEventArgs e)
+        {
+            controllerService.Controller.SetSliderValue(Xbox360Slider.RightTrigger, 0);
         }
 
         private void RecSettingButton_Click(object sender, EventArgs e)
@@ -1307,7 +1217,6 @@ namespace VirtualController
                 {
                     macroManager.SaveMacro(macroName, sb.ToString());
                     LoadMacroList();
-                    MessageBox.Show("上書き保存しました。", "保存完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
             }
@@ -1322,7 +1231,6 @@ namespace VirtualController
                     string macroName = Path.GetFileNameWithoutExtension(sfd.FileName);
                     macroManager.SaveMacro(macroName, sb.ToString());
                     LoadMacroList();
-                    MessageBox.Show("保存しました。", "保存完了", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }

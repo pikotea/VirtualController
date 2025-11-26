@@ -36,7 +36,6 @@ namespace VirtualController
             bool isRepeat,
             bool isRandom,
             bool xAxisReverse,
-            int frame,
             CancellationToken token,
             bool manageTiming = true,
             Dictionary<string, List<Dictionary<string, string>>> preParsed = null)
@@ -156,7 +155,7 @@ namespace VirtualController
                                     else if (key == "MP") key = "Y";
                                     else if (key == "MK") key = "B";
                                     else if (key == "HP") key = "RB";
-                                    else if (key == "HK") key = "LB";
+                                    else if (key == "HK") key = "RT";
                                     if (val == "ON")
                                         keyState.KeyStates[key] = true;
                                     else if (val == "OFF")
@@ -190,6 +189,13 @@ namespace VirtualController
                                 controllerService.Controller.SetButtonState(Xbox360Button.Y, keyState.KeyStates["Y"]);
                                 controllerService.Controller.SetButtonState(Xbox360Button.LeftShoulder, keyState.KeyStates["LB"]);
                                 controllerService.Controller.SetButtonState(Xbox360Button.RightShoulder, keyState.KeyStates["RB"]);
+
+                                // 再生ループでボタン/軸をコントローラに反映する箇所に追加
+                                // (buttonStates の反映のあと、トリガーを反映)
+                                bool ltOn = keyState.KeyStates.ContainsKey("LT") && keyState.KeyStates["LT"];
+                                bool rtOn = keyState.KeyStates.ContainsKey("RT") && keyState.KeyStates["RT"];
+                                controllerService.Controller.SetSliderValue(Xbox360Slider.LeftTrigger, ltOn ? byte.MaxValue : (byte)0);
+                                controllerService.Controller.SetSliderValue(Xbox360Slider.RightTrigger, rtOn ? byte.MaxValue : (byte)0);
 
                                 // 次フレーム予定時刻を更新してハイブリッドで待機
                                 nextFrameTime += frameMs;
@@ -243,7 +249,6 @@ namespace VirtualController
             bool isRepeat,
             bool isRandom,
             bool xAxisReverse,
-            int frame,
             CancellationToken token,
             SharpDX.DirectInput.Joystick joystick = null,
             RecordSettingsForm.RecordSettingsConfig recordConfig = null,
@@ -341,7 +346,6 @@ namespace VirtualController
                     isRepeat,
                     isRandom,
                     xAxisReverse,
-                    frame,
                     token,
                     manageTiming,
                     parsedMacros // 事前パース済みを渡す
@@ -422,70 +426,77 @@ namespace VirtualController
                             controllerService.Controller.SetButtonState(Xbox360Button.Y, keyState.KeyStates["Y"]);
                             controllerService.Controller.SetButtonState(Xbox360Button.LeftShoulder, keyState.KeyStates["LB"]);
                             controllerService.Controller.SetButtonState(Xbox360Button.RightShoulder, keyState.KeyStates["RB"]);
-                        }
 
-                        bool triggered = false;
-                        while (!triggered && !token.IsCancellationRequested)
-                        {
-                            var state = joystick.GetCurrentState();
-                            var pressedKeys = new List<string>();
+                            // 再生ループでボタン/軸をコントローラに反映する箇所に追加
+                            // (buttonStates の反映のあと、トリガーを反映)
+                            bool ltOn = keyState.KeyStates.ContainsKey("LT") && keyState.KeyStates["LT"];
+                            bool rtOn = keyState.KeyStates.ContainsKey("RT") && keyState.KeyStates["RT"];
+                            controllerService.Controller.SetSliderValue(Xbox360Slider.LeftTrigger, ltOn ? byte.MaxValue : (byte)0);
+                            controllerService.Controller.SetSliderValue(Xbox360Slider.RightTrigger, rtOn ? byte.MaxValue : (byte)0);
 
-                            foreach (var kv in recordConfig.ButtonIndices)
+                            bool triggered = false;
+                            while (!triggered && !token.IsCancellationRequested)
                             {
-                                if (kv.Value != null && state.Buttons.Length > kv.Value.Value && state.Buttons[kv.Value.Value])
-                                    pressedKeys.Add(kv.Key.Replace("Button", ""));
-                            }
-                            foreach (var kv in recordConfig.ZValues)
-                            {
-                                if (kv.Value != null && state.Z == kv.Value.Value)
-                                    pressedKeys.Add(kv.Key.Replace("Button", ""));
-                            }
-                            if (state.PointOfViewControllers != null && state.PointOfViewControllers.Length > 0)
-                            {
-                                int pov = state.PointOfViewControllers[0];
-                                if (pov == 0) pressedKeys.Add("UP");
-                                else if (pov == 9000) pressedKeys.Add("RIGHT");
-                                else if (pov == 18000) pressedKeys.Add("DOWN");
-                                else if (pov == 27000) pressedKeys.Add("LEFT");
-                                else if (pov == 4500) { pressedKeys.Add("UP"); pressedKeys.Add("RIGHT"); }
-                                else if (pov == 13500) { pressedKeys.Add("DOWN"); pressedKeys.Add("RIGHT"); }
-                                else if (pov == 22500) { pressedKeys.Add("DOWN"); pressedKeys.Add("LEFT"); }
-                                else if (pov == 31500) { pressedKeys.Add("UP"); pressedKeys.Add("LEFT"); }
-                            }
+                                var state = joystick.GetCurrentState();
+                                var pressedKeys = new List<string>();
 
-                            var triggerdMacros = new List<string>();
-                            foreach (var mt in triggerMacros)
-                            {
-                                if (mt.triggers.All(t => pressedKeys.Contains(t)))
+                                foreach (var kv in recordConfig.ButtonIndices)
                                 {
-                                    triggerdMacros.Add(mt.macroName);
+                                    if (kv.Value != null && state.Buttons.Length > kv.Value.Value && state.Buttons[kv.Value.Value])
+                                        pressedKeys.Add(kv.Key.Replace("Button", ""));
                                 }
-                            }
-
-                            if (triggerdMacros.Count > 0)
-                            {
-                                controllerService.AllOff();
-                                System.Diagnostics.Debug.WriteLine("[MacroPlayer] PlayAsync(ジョイスティック/設定付き) 実行");
-
-                                // parsedMacros からトリガー対象のパース済みデータを抽出して渡す（ネスト再生で再読み込みしない）
-                                var parsedSubset = new Dictionary<string, List<Dictionary<string, string>>>(StringComparer.OrdinalIgnoreCase);
-                                foreach (var nm in triggerdMacros)
+                                foreach (var kv in recordConfig.ZValues)
                                 {
-                                    if (parsedMacros.TryGetValue(nm, out var arr))
-                                        parsedSubset[nm] = arr;
+                                    if (kv.Value != null && state.Z == kv.Value.Value)
+                                        pressedKeys.Add(kv.Key.Replace("Button", ""));
+                                }
+                                if (state.PointOfViewControllers != null && state.PointOfViewControllers.Length > 0)
+                                {
+                                    int pov = state.PointOfViewControllers[0];
+                                    if (pov == 0) pressedKeys.Add("UP");
+                                    else if (pov == 9000) pressedKeys.Add("RIGHT");
+                                    else if (pov == 18000) pressedKeys.Add("DOWN");
+                                    else if (pov == 27000) pressedKeys.Add("LEFT");
+                                    else if (pov == 4500) { pressedKeys.Add("UP"); pressedKeys.Add("RIGHT"); }
+                                    else if (pov == 13500) { pressedKeys.Add("DOWN"); pressedKeys.Add("RIGHT"); }
+                                    else if (pov == 22500) { pressedKeys.Add("DOWN"); pressedKeys.Add("LEFT"); }
+                                    else if (pov == 31500) { pressedKeys.Add("UP"); pressedKeys.Add("LEFT"); }
                                 }
 
-                                // ネストして再生（manageTiming=false を渡して Begin/End/Priority の重複を回避）
-                                await PlayAsync(
-                                    triggerdMacros,
-                                    frameMs, 0, false, isRandom, xAxisReverse, frame, token, false, parsedSubset
-                                );
-                                triggered = true;
-                            }
+                                var triggerdMacros = new List<string>();
+                                foreach (var mt in triggerMacros)
+                                {
+                                    if (mt.triggers.All(t => pressedKeys.Contains(t)))
+                                    {
+                                        triggerdMacros.Add(mt.macroName);
+                                    }
+                                }
 
-                            // 次チェックまで高精度で待機（frameMs に同期）
-                            nextFrameTime += frameMs / 3;
-                            TimingHelpers.WaitUntil(sw, nextFrameTime, token);
+                                if (triggerdMacros.Count > 0)
+                                {
+                                    controllerService.AllOff();
+                                    System.Diagnostics.Debug.WriteLine("[MacroPlayer] PlayAsync(ジョイスティック/設定付き) 実行");
+
+                                    // parsedMacros からトリガー対象のパース済みデータを抽出して渡す（ネスト再生で再読み込みしない）
+                                    var parsedSubset = new Dictionary<string, List<Dictionary<string, string>>>(StringComparer.OrdinalIgnoreCase);
+                                    foreach (var nm in triggerdMacros)
+                                    {
+                                        if (parsedMacros.TryGetValue(nm, out var arr))
+                                            parsedSubset[nm] = arr;
+                                    }
+
+                                    // ネストして再生（manageTiming=false を渡して Begin/End/Priority の重複を回避）
+                                    await PlayAsync(
+                                        triggerdMacros,
+                                        frameMs, 0, false, isRandom, xAxisReverse, token, false, parsedSubset
+                                    );
+                                    triggered = true;
+                                }
+
+                                // 次チェックまで高精度で待機（frameMs に同期）
+                                nextFrameTime += frameMs / 3;
+                                TimingHelpers.WaitUntil(sw, nextFrameTime, token);
+                            }
                         }
                     }
                 }
@@ -504,17 +515,12 @@ namespace VirtualController
         // MacroKeyStateを内包
         private class MacroKeyState
         {
+            // KeyStates 辞書に LT, RT を追加
             public Dictionary<string, bool> KeyStates = new Dictionary<string, bool>
             {
                 { "UP", false }, { "DOWN", false }, { "LEFT", false }, { "RIGHT", false },
-                { "A", false }, { "B", false }, { "X", false }, { "Y", false }, { "LB", false }, { "RB", false },
-                // --- エイリアス追加 ---
-                { "LP", false }, // Xのエイリアス
-                { "LK", false }, // Aのエイリアス
-                { "MP", false }, // Yのエイリアス
-                { "MK", false }, // Bのエイリアス
-                { "HP", false }, // RBのエイリアス
-                { "HK", false }  // LBのエイリアス
+                { "A", false }, { "B", false }, { "X", false }, { "Y", false }, { "LT", false }, { "RT", false }, { "LB", false }, { "RB", false },
+                { "LP", false }, { "LK", false }, { "MP", false }, { "MK", false }, { "HP", false },{ "HK", false } 
             };
         }
 
