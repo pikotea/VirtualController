@@ -379,13 +379,14 @@ namespace VirtualController
 
                 try
                 {
+                    System.Diagnostics.Debug.WriteLine("[MacroPlayer] TRIGGERキー待ち状態");
                     var sw = Stopwatch.StartNew();
                     double nextFrameTime = sw.Elapsed.TotalMilliseconds;
 
                     Random rand = new Random();
                     while (!token.IsCancellationRequested)
                     {
-                        // トリガー待ちの間は prioritizedWaitActions のボタンを押す（毎フレーム更新）
+                        // prioritizedWaitActions がある場合はコントローラに押し続ける状態を反映する（あくまで表示／維持用）
                         if (prioritizedWaitActions != null && prioritizedWaitActions.Count > 0)
                         {
                             var keyState = new MacroKeyState();
@@ -397,7 +398,7 @@ namespace VirtualController
                                 else if (key == "MP") key = "Y";
                                 else if (key == "MK") key = "B";
                                 else if (key == "HP") key = "RB";
-                                else if (key == "HK") key = "LB";
+                                else if (key == "HK") key = "RT";
                                 keyState.KeyStates[key] = true;
                             }
 
@@ -427,29 +428,37 @@ namespace VirtualController
                             controllerService.Controller.SetButtonState(Xbox360Button.LeftShoulder, keyState.KeyStates["LB"]);
                             controllerService.Controller.SetButtonState(Xbox360Button.RightShoulder, keyState.KeyStates["RB"]);
 
-                            // 再生ループでボタン/軸をコントローラに反映する箇所に追加
-                            // (buttonStates の反映のあと、トリガーを反映)
                             bool ltOn = keyState.KeyStates.ContainsKey("LT") && keyState.KeyStates["LT"];
                             bool rtOn = keyState.KeyStates.ContainsKey("RT") && keyState.KeyStates["RT"];
                             controllerService.Controller.SetSliderValue(Xbox360Slider.LeftTrigger, ltOn ? byte.MaxValue : (byte)0);
                             controllerService.Controller.SetSliderValue(Xbox360Slider.RightTrigger, rtOn ? byte.MaxValue : (byte)0);
+                        }
 
-                            bool triggered = false;
-                            while (!triggered && !token.IsCancellationRequested)
+                        // ここは必ず実行：ジョイスティックを常時ポーリングしてトリガーを検出する
+                        bool triggered = false;
+                        while (!triggered && !token.IsCancellationRequested)
+                        {
+                            try
                             {
+                                // joystick 状態取得
                                 var state = joystick.GetCurrentState();
                                 var pressedKeys = new List<string>();
 
+                                // ボタンマッピングから検出
                                 foreach (var kv in recordConfig.ButtonIndices)
                                 {
-                                    if (kv.Value != null && state.Buttons.Length > kv.Value.Value && state.Buttons[kv.Value.Value])
+                                    if (kv.Value != null && state.Buttons != null && state.Buttons.Length > kv.Value.Value && state.Buttons[kv.Value.Value])
                                         pressedKeys.Add(kv.Key.Replace("Button", ""));
                                 }
+
+                                // Z 値マッピング
                                 foreach (var kv in recordConfig.ZValues)
                                 {
                                     if (kv.Value != null && state.Z == kv.Value.Value)
                                         pressedKeys.Add(kv.Key.Replace("Button", ""));
                                 }
+
+                                // POV
                                 if (state.PointOfViewControllers != null && state.PointOfViewControllers.Length > 0)
                                 {
                                     int pov = state.PointOfViewControllers[0];
@@ -463,6 +472,7 @@ namespace VirtualController
                                     else if (pov == 31500) { pressedKeys.Add("UP"); pressedKeys.Add("LEFT"); }
                                 }
 
+                                // トリガー判定
                                 var triggerdMacros = new List<string>();
                                 foreach (var mt in triggerMacros)
                                 {
@@ -477,7 +487,6 @@ namespace VirtualController
                                     controllerService.AllOff();
                                     System.Diagnostics.Debug.WriteLine("[MacroPlayer] PlayAsync(ジョイスティック/設定付き) 実行");
 
-                                    // parsedMacros からトリガー対象のパース済みデータを抽出して渡す（ネスト再生で再読み込みしない）
                                     var parsedSubset = new Dictionary<string, List<Dictionary<string, string>>>(StringComparer.OrdinalIgnoreCase);
                                     foreach (var nm in triggerdMacros)
                                     {
@@ -485,18 +494,22 @@ namespace VirtualController
                                             parsedSubset[nm] = arr;
                                     }
 
-                                    // ネストして再生（manageTiming=false を渡して Begin/End/Priority の重複を回避）
                                     await PlayAsync(
                                         triggerdMacros,
                                         frameMs, 0, false, isRandom, xAxisReverse, token, false, parsedSubset
                                     );
                                     triggered = true;
                                 }
-
-                                // 次チェックまで高精度で待機（frameMs に同期）
-                                nextFrameTime += frameMs / 3;
-                                TimingHelpers.WaitUntil(sw, nextFrameTime, token);
                             }
+                            catch (Exception ex)
+                            {
+                                // GetCurrentState や処理中の例外を捕捉してログに出す
+                                System.Diagnostics.Debug.WriteLine($"[MacroPlayer] joystick 取得/判定で例外: {ex}");
+                            }
+
+                            // 次チェックまで高精度で待機（frameMs に同期）
+                            nextFrameTime += frameMs / 3;
+                            TimingHelpers.WaitUntil(sw, nextFrameTime, token);
                         }
                     }
                 }
