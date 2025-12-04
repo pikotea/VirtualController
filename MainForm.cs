@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,6 +12,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Reflection;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 
 namespace VirtualController
@@ -54,6 +57,13 @@ namespace VirtualController
         private readonly object macroWatcherLock = new object();
         private int macroWatcherDebounceMs = 200;
 
+        // 新: 現在の相対フォルダ（"" = ルート）
+        private string currentRelativePath = "";
+
+        // アイコンキャッシュ
+        private Image folderIcon;
+        // fileIcon は廃止（ファイルはアイコンなしで表示）
+
         /// <summary>
         /// 必要なデザイナー変数です。
         /// </summary>
@@ -86,8 +96,8 @@ namespace VirtualController
             macroManager = new MacroManager(macroFolder);
             macroPlayer = new MacroPlayer(controllerService, macroFolder);
             StartMacroFolderWatcher();
+            // 初期表示は currentRelativePath (LoadMacroSettings が起動時に上書きする場合がある)
             LoadMacroList();
-
         }
 
         private void RunMigrationsIfNeeded()
@@ -124,6 +134,7 @@ namespace VirtualController
         // --- 1. 起動時（Form1_Load）で設定ファイルを読み込む ---
         private void Form1_Load(object sender, EventArgs e)
         {
+
             // --- Form1_Loadでコントローラ操作ボタンを有効化 ---
             this.SetControllerButtonsEnabled(true); // ← 常に有効化
             PlayMacroButton.Text = "再生";
@@ -136,45 +147,155 @@ namespace VirtualController
             UpdateRecButtonEnabled();
         }
 
-        // マクロ一覧のリロード
-        private void LoadMacroList(bool stopMacro = true)
+
+        // --- アイコン読み込みヘルパー ---
+        private void EnsureIconsLoaded()
         {
+            if (folderIcon != null) return;
+
+            var info = new SHSTOCKICONINFO();
+            info.cbSize = (uint)Marshal.SizeOf(typeof(SHSTOCKICONINFO));
+            const uint SIID_FOLDER = 3;
+            const uint SHGSI_ICON = 0x000000100;
+            const uint SHGSI_SMALLICON = 0x000000001;
+
+            int hr = SHGetStockIconInfo(SIID_FOLDER, SHGSI_ICON | SHGSI_SMALLICON, ref info);
+            if (hr == 0 && info.hIcon != IntPtr.Zero)
+            {
+                try
+                {
+                    using (var ico = Icon.FromHandle(info.hIcon))
+                    {
+                        folderIcon = ico.ToBitmap();
+                    }
+                }
+                finally
+                {
+                    DestroyIcon(info.hIcon);
+                }
+            }
+
+            // フォールバック: 取得できなければ組み込みの SystemIcons を使う
+            if (folderIcon == null)
+            {
+                folderIcon = SystemIcons.WinLogo.ToBitmap();
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        private struct SHSTOCKICONINFO
+        {
+            public uint cbSize;
+            public IntPtr hIcon;
+            public int iSysImageIndex;
+            public int iIcon;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+            public string szPath;
+        }
+
+        [DllImport("shell32.dll", SetLastError = true)]
+        private static extern int SHGetStockIconInfo(uint siid, uint uFlags, ref SHSTOCKICONINFO psii);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool DestroyIcon(IntPtr hIcon);
+
+        // マクロ一覧のリロード（相対フォルダ対応）
+        private void LoadMacroList(bool stopMacro = true, string relativePath = null)
+        {
+            if (relativePath == null) relativePath = currentRelativePath ?? "";
+            // 現在の相対パスを更新
+            currentRelativePath = relativePath ?? "";
+
             // マクロ一覧更新時は自動停止（条件付き）
             if (stopMacro)
                 StopMacroIfPlaying();
 
-            // 現在の選択状態を保存
-            var selectedNames = MacroListBox.SelectedItems.Cast<string>().ToList();
+            // 現在の選択状態を保存（名前ベース）
+            var selectedNames = MacroListBox.SelectedItems.Cast<object>()
+                .Select(o => o?.ToString() ?? "")
+                .ToList();
 
             MacroListBox.Items.Clear();
-            var macroNames = macroManager.GetMacroNames(); // 変更
-            foreach (var name in macroNames)
+
+            // 取得: フォルダ/ファイルエントリ
+            var entries = macroManager.GetMacroEntries(currentRelativePath);
+
+            // ルートでなければ「…」を先頭に追加（親へ戻る）
+            if (!string.IsNullOrEmpty(currentRelativePath))
             {
-                MacroListBox.Items.Add(name);
+                var parentEntry = new MacroManager.MacroEntry { Name = "…", RelativePath = "..", IsFolder = true };
+                MacroListBox.Items.Add(parentEntry);
             }
 
-            // 選択状態を復元
+            // ディレクトリ（先）とファイル（後）は MacroManager が順序を返す
+            foreach (var entry in entries)
+            {
+                MacroListBox.Items.Add(entry);
+            }
+
+            // 修正: 常に複数選択を許可（サブフォルダ内でも複数選択できるようにする）
+            MacroListBox.SelectionMode = SelectionMode.MultiExtended;
+
+            // 選択状態を復元（名前が一致するアイテムを再選択）
             MacroListBox.ClearSelected();
             foreach (var name in selectedNames)
             {
-                int idx = MacroListBox.Items.IndexOf(name);
-                if (idx >= 0)
-                    MacroListBox.SetSelected(idx, true);
+                for (int i = 0; i < MacroListBox.Items.Count; i++)
+                {
+                    if (MacroListBox.Items[i].ToString().Equals(name, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        MacroListBox.SetSelected(i, true);
+                        break;
+                    }
+                }
             }
 
-            // 追加: pendingSelectMacroName があれば優先して選択（保存直後の非同期更新対策）
+            // pendingSelectMacroName があれば優先選択（保存直後の非同期更新対策）
             if (!string.IsNullOrEmpty(pendingSelectMacroName))
             {
-                int idx = MacroListBox.Items.IndexOf(pendingSelectMacroName);
-                if (idx >= 0)
+                for (int i = 0; i < MacroListBox.Items.Count; i++)
                 {
-                    MacroListBox.ClearSelected();
-                    MacroListBox.SetSelected(idx, true);
+                    if (MacroListBox.Items[i].ToString().Equals(pendingSelectMacroName, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        MacroListBox.ClearSelected();
+                        MacroListBox.SetSelected(i, true);
+                        break;
+                    }
                 }
                 pendingSelectMacroName = null;
             }
         }
 
+        // DrawItem ハンドラ（Designer で接続済み）
+        private void MacroListBox_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0) return;
+            e.DrawBackground();
+            EnsureIconsLoaded();
+
+            var item = MacroListBox.Items[e.Index];
+            string text = item?.ToString() ?? "";
+            bool isFolder = false;
+
+            if (item is MacroManager.MacroEntry me)
+                isFolder = me.IsFolder;
+            else if (!string.IsNullOrEmpty(text) && text.StartsWith("…"))
+                isFolder = true;
+
+            var icon = isFolder ? folderIcon : null;
+            Rectangle iconRect = new Rectangle(e.Bounds.Left + 2, e.Bounds.Top + 2, 16, 16);
+
+            if (icon != null)
+            {
+                e.Graphics.DrawImage(icon, iconRect);
+            }
+
+            Rectangle textRect = new Rectangle(e.Bounds.Left + 22, e.Bounds.Top + 2, e.Bounds.Width - 24, e.Bounds.Height - 4);
+            var fore = ((e.State & DrawItemState.Selected) == DrawItemState.Selected) ? SystemColors.HighlightText : e.ForeColor;
+            TextRenderer.DrawText(e.Graphics, text, e.Font, textRect, fore, TextFormatFlags.VerticalCenter | TextFormatFlags.Left);
+
+            e.DrawFocusRectangle();
+        }
 
         // マクロ再生
         private void PlayMacroButton_Click(object sender, EventArgs e)
@@ -191,7 +312,6 @@ namespace VirtualController
             {
                 OverwriteMacro();
             }
-
 
             // UI制御
             PlayMacroButton.Enabled = false;
@@ -211,7 +331,7 @@ namespace VirtualController
 
 
             // 選択マクロ名リスト
-            var macroNames = MacroListBox.SelectedItems.Cast<string>().ToList();
+            var macroNames = GetSelectedMacroNames(includeRelativePath: true);
 
             // ここで全選択状態を解除
             this.Invoke((Action)(() =>
@@ -260,8 +380,13 @@ namespace VirtualController
         // フォルダ監視でマクロ一覧リロード
         private void StartMacroFolderWatcher()
         {
-            macroWatcher = new FileSystemWatcher(macroFolder, "*.csv");
-            macroWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
+            // ルートフォルダを監視。フィルタは "*.*" にしてフォルダイベントも取得する
+            macroWatcher = new FileSystemWatcher(macroFolder)
+            {
+                Filter = "*.*",
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite,
+                IncludeSubdirectories = true
+            };
 
             // バッファを増やして大量イベント時のオーバーフローを緩和
             try
@@ -296,7 +421,7 @@ namespace VirtualController
                         }
                         finally
                         {
-                            // 少し待ってから再度有効化する（余裕時間）
+                            // 少し待ってから再度有効化する（余暇時間）
                             var t = new System.Timers.Timer(200) { AutoReset = false };
                             t.Elapsed += (s2, e2) =>
                             {
@@ -385,30 +510,80 @@ namespace VirtualController
         }
 
 
-        // マクロ選択時のロード（複数選択対応・編集エリア表示）
+        // マクロ選択時のロード（フォルダ遷移対応）
         // --- マクロ選択時にラベル表示・保存 ---
         private void MacroListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // クリックでフォルダに入る仕様: 最初に選んだアイテムがフォルダなら遷移
+            if (MacroListBox.SelectedItems.Count > 0)
+            {
+                var first = MacroListBox.SelectedItems[0];
+                if (first is MacroManager.MacroEntry me && me.IsFolder)
+                {
+                    // 追加: フォルダ移動時はマクロを停止し、選択状態をクリアする
+                    StopMacroIfPlaying();
+                    MacroListBox.ClearSelected();
+
+                    // parent entry ("..")
+                    if (me.RelativePath == "..")
+                    {
+                        // 親へ戻る
+                        if (string.IsNullOrEmpty(currentRelativePath))
+                        {
+                            // already root -> nothing
+                        }
+                        else
+                        {
+                            var parent = Path.GetDirectoryName(currentRelativePath);
+                            // Path.GetDirectoryName returns null for single-level; normalize to empty string
+                            currentRelativePath = parent ?? "";
+                            LoadMacroList(false, currentRelativePath);
+                            // 重要: フォルダ移動直後に設定を保存して起動時の復元を最新にする
+                            SaveMacroSettings();
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        // サブフォルダへ移動（relative path stored in entry)
+                        currentRelativePath = me.RelativePath ?? "";
+                        LoadMacroList(false, currentRelativePath);
+                        // 重要: フォルダ移動直後に設定を保存して起動時の復元を最新にする
+                        SaveMacroSettings();
+                        return;
+                    }
+                }
+            }
+
+            // 通常のファイル選択処理（複数選択対応）
             StopMacroIfPlaying();
 
             loadedMacro.Clear();
             string lastMacroName = null;
             foreach (var macroNameObj in MacroListBox.SelectedItems)
             {
-                string macroName = macroNameObj as string;
+                string macroName = null;
+                if (macroNameObj is MacroManager.MacroEntry me2 && !me2.IsFolder)
+                    macroName = me2.Name;
+                else if (macroNameObj is string s)
+                    macroName = s;
+
                 if (string.IsNullOrEmpty(macroName)) continue;
-                // ここで自作MacroFrameのLoadMacroFileを使う
-                var macroFrames = MacroPlayer.MacroFrame.LoadMacroFile(Path.Combine(macroFolder, macroName + ".csv"));
+
+                // サブフォルダ対応のロード
+                var macroFrames = MacroPlayer.MacroFrame.LoadMacroFile(Path.Combine(macroFolder, string.IsNullOrEmpty(currentRelativePath) ? macroName + ".csv" : Path.Combine(currentRelativePath, macroName + ".csv")));
                 if (macroFrames != null && macroFrames.Count > 0)
                 {
                     loadedMacro.AddRange(macroFrames);
                 }
                 lastMacroName = macroName;
             }
+
             // 編集エリアに内容表示
             if (lastMacroName != null)
             {
-                MacroEditTextBox.Text = macroManager.LoadMacroText(lastMacroName); // 変更
+                // LoadMacroText は相対フォルダ対応を使う
+                MacroEditTextBox.Text = macroManager.LoadMacroText(currentRelativePath, lastMacroName);
                 MacroEditTextBox.Enabled = true;
                 editingMacroName = lastMacroName;
                 lastLoadedMacroText = MacroEditTextBox.Text;
@@ -422,6 +597,7 @@ namespace VirtualController
                 lastLoadedMacroText = "";
                 MacroNameLabel.Text = "";
             }
+
             // 名前を付けて保存は常に有効
             SaveAsButton.Enabled = true;
             // 上書き保存は初期状態では無効
@@ -445,40 +621,43 @@ namespace VirtualController
                 OverwriteSaveButton.Enabled = false;
         }
 
-        // 保存ボタン押下時の処理（変更部分のみ）
+        // 保存ボタン押下時の処理（相対フォルダ対応）
         private void SaveMacroButton_Click(object sender, EventArgs e)
         {
             string macroName = null;
             if (MacroListBox.SelectedItems.Count > 0)
             {
-                macroName = MacroListBox.SelectedItems[MacroListBox.SelectedItems.Count - 1] as string;
+                var sel = MacroListBox.SelectedItems[MacroListBox.SelectedItems.Count - 1];
+                macroName = sel is MacroManager.MacroEntry me && !me.IsFolder ? me.Name : sel?.ToString();
             }
             if (string.IsNullOrEmpty(macroName))
             {
-                // 新規マクロ名生成
+                // 新規マクロ名生成（現在フォルダ内の重複チェック）
                 int idx = 1;
+                List<string> existing = macroManager.GetMacroNames(currentRelativePath);
                 do
                 {
                     macroName = $"新規マクロ{idx}";
                     idx++;
-                } while (macroManager.GetMacroNames().Contains(macroName));
+                } while (existing.Contains(macroName));
             }
             using (var sfd = new SaveFileDialog())
             {
-                sfd.InitialDirectory = macroFolder;
+                string initialDir = string.IsNullOrEmpty(currentRelativePath) ? macroFolder : Path.Combine(macroFolder, currentRelativePath);
+                sfd.InitialDirectory = initialDir;
                 sfd.FileName = macroName + ".csv";
                 sfd.Filter = "CSVファイル (*.csv)|*.csv";
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     var savedName = Path.GetFileNameWithoutExtension(sfd.FileName);
-                    macroManager.SaveMacro(savedName, MacroEditTextBox.Text);
+                    // 相対フォルダに保存
+                    macroManager.SaveMacroInFolder(currentRelativePath, savedName, MacroEditTextBox.Text);
 
 
                     // マクロ一覧再読み込み
                     pendingSelectMacroName = savedName;
                     LoadMacroList();
                     SaveAsButton.Enabled = false;
-                    
                 }
             }
         }
@@ -520,21 +699,19 @@ namespace VirtualController
             OverwriteMacro();
         }
 
-        // --- 上書き保存処理 ---
+        // --- 上書き保存処理（相対フォルダ対応） ---
         private void OverwriteMacro()
         {
             if (!string.IsNullOrEmpty(editingMacroName))
             {
-                string path = Path.Combine(macroFolder, editingMacroName + ".csv");
-
                 try
                 {
                     suppressWatcherEvents = true;
                     pendingSelectMacroName = editingMacroName;  // 上書き保存後に優先選択するマクロ名を設定
 
-                    File.WriteAllText(path, MacroEditTextBox.Text, Encoding.UTF8);
+                    macroManager.SaveMacroInFolder(currentRelativePath, editingMacroName, MacroEditTextBox.Text);
                     lastLoadedMacroText = MacroEditTextBox.Text;
-                    loadedMacro = MacroPlayer.MacroFrame.LoadMacroFile(path);
+                    loadedMacro = MacroPlayer.MacroFrame.LoadMacroFile(Path.Combine(macroFolder, string.IsNullOrEmpty(currentRelativePath) ? editingMacroName + ".csv" : Path.Combine(currentRelativePath, editingMacroName + ".csv")));
                     LoadMacroList(false);
                     OverwriteSaveButton.Enabled = false;
                     this.Invoke((Action)(() =>
@@ -551,7 +728,6 @@ namespace VirtualController
         }
 
         // 置き換え対象: 現在の SaveMacroSettings(...)
-        // 戻す内容（引数なし）
         private void SaveMacroSettings()
         {
             // 選択されているマクロ名を取得
@@ -563,22 +739,24 @@ namespace VirtualController
             var selectedMacroStr = string.Join(",", selectedMacros);
             var lines = new[]
             {
-                $"FrameMs={FrameMsTextBox.Text}",
-                $"PlayWait={PlayWaitTextBox.Text}",
-                $"Repeat={RepeatCheckBox.Checked}",
-                $"Random={RandomCheckBox.Checked}",
-                $"XAxisReverse={XAxisReverseCheckBox.Checked}", // 追加
-                $"SelectedMacros={selectedMacroStr}"
-            };
+        $"FrameMs={FrameMsTextBox.Text}",
+        $"PlayWait={PlayWaitTextBox.Text}",
+        $"Repeat={RepeatCheckBox.Checked}",
+        $"Random={RandomCheckBox.Checked}",
+        $"XAxisReverse={XAxisReverseCheckBox.Checked}", // 追加
+        $"SelectedMacros={selectedMacroStr}",
+        $"CurrentFolder={currentRelativePath}"
+    };
             File.WriteAllLines(Path.Combine(Application.StartupPath, SettingsFile), lines, Encoding.UTF8);
         }
 
-        // --- 設定ロード: 複数選択復元 ---
+        // --- 設定ロード: 複数選択復元（CurrentFolder 復元含む） ---
         private void LoadMacroSettings()
         {
             string path = Path.Combine(Application.StartupPath, SettingsFile);
             if (!File.Exists(path)) return;
             string[] selectedMacros = null;
+            string loadedCurrentFolder = null;
             foreach (var line in File.ReadAllLines(path))
             {
                 var kv = line.Split('=');
@@ -605,17 +783,43 @@ namespace VirtualController
                     case "SelectedMacros":
                         selectedMacros = val.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                         break;
+                    case "CurrentFolder":
+                        loadedCurrentFolder = val;
+                        break;
                 }
             }
+
+            // currentRelativePath を復元（存在確認）
+            if (!string.IsNullOrEmpty(loadedCurrentFolder))
+            {
+                string full = Path.Combine(macroFolder, loadedCurrentFolder);
+                if (Directory.Exists(full))
+                {
+                    currentRelativePath = loadedCurrentFolder;
+                }
+                else
+                {
+                    currentRelativePath = "";
+                }
+            }
+
+            // マクロ一覧を currentRelativePath に合わせて再構築
+            LoadMacroList(false, currentRelativePath);
+
             // マクロ一覧ロード後に複数選択復元
             if (selectedMacros != null && selectedMacros.Length > 0)
             {
                 MacroListBox.ClearSelected();
                 foreach (var macro in selectedMacros)
                 {
-                    int idx = MacroListBox.Items.IndexOf(macro);
-                    if (idx >= 0)
-                        MacroListBox.SetSelected(idx, true);
+                    for (int i = 0; i < MacroListBox.Items.Count; i++)
+                    {
+                        if (MacroListBox.Items[i].ToString().Equals(macro, StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            MacroListBox.SetSelected(i, true);
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -745,8 +949,8 @@ namespace VirtualController
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
-                    { Xbox360Axis.LeftThumbX, short.MaxValue },
-                    { Xbox360Axis.LeftThumbY, short.MinValue }
+            { Xbox360Axis.LeftThumbX, short.MaxValue },
+            { Xbox360Axis.LeftThumbY, short.MinValue }
                 },
                 null);
         }
@@ -755,8 +959,8 @@ namespace VirtualController
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
-                    { Xbox360Axis.LeftThumbX, 0 },
-                    { Xbox360Axis.LeftThumbY, 0 }
+            { Xbox360Axis.LeftThumbX, 0 },
+            { Xbox360Axis.LeftThumbY, 0 }
                 },
                 null);
         }
@@ -767,8 +971,8 @@ namespace VirtualController
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
-                    { Xbox360Axis.LeftThumbX, short.MinValue },
-                    { Xbox360Axis.LeftThumbY, short.MaxValue }
+            { Xbox360Axis.LeftThumbX, short.MinValue },
+            { Xbox360Axis.LeftThumbY, short.MaxValue }
                 },
                 null);
         }
@@ -777,8 +981,8 @@ namespace VirtualController
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
-                    { Xbox360Axis.LeftThumbX, 0 },
-                    { Xbox360Axis.LeftThumbY, 0 }
+            { Xbox360Axis.LeftThumbX, 0 },
+            { Xbox360Axis.LeftThumbY, 0 }
                 },
                 null);
         }
@@ -789,8 +993,8 @@ namespace VirtualController
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
-                    { Xbox360Axis.LeftThumbX, short.MaxValue },
-                    { Xbox360Axis.LeftThumbY, short.MaxValue }
+            { Xbox360Axis.LeftThumbX, short.MaxValue },
+            { Xbox360Axis.LeftThumbY, short.MaxValue }
                 },
                 null);
         }
@@ -799,8 +1003,8 @@ namespace VirtualController
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
-                    { Xbox360Axis.LeftThumbX, 0 },
-                    { Xbox360Axis.LeftThumbY, 0 }
+            { Xbox360Axis.LeftThumbX, 0 },
+            { Xbox360Axis.LeftThumbY, 0 }
                 },
                 null);
         }
@@ -811,8 +1015,8 @@ namespace VirtualController
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
-                    { Xbox360Axis.LeftThumbX, short.MinValue },
-                    { Xbox360Axis.LeftThumbY, short.MinValue }
+            { Xbox360Axis.LeftThumbX, short.MinValue },
+            { Xbox360Axis.LeftThumbY, short.MinValue }
                 },
                 null);
         }
@@ -821,8 +1025,8 @@ namespace VirtualController
             controllerService.SetInputs(
                 new Dictionary<Xbox360Axis, short>
                 {
-                    { Xbox360Axis.LeftThumbX, 0 },
-                    { Xbox360Axis.LeftThumbY, 0 }
+            { Xbox360Axis.LeftThumbX, 0 },
+            { Xbox360Axis.LeftThumbY, 0 }
                 },
                 null);
         }
@@ -1214,9 +1418,9 @@ namespace VirtualController
             var keyOrder = new[] { "UP", "DOWN", "LEFT", "RIGHT", "LP", "MP", "HP", "LK", "MK", "HK" };
             // 方向キーのキャメルケース変換用
             var directionCamel = new Dictionary<string, string>
-            {
-                { "UP", "Up" }, { "DOWN", "Down" }, { "LEFT", "Left" }, { "RIGHT", "Right" }
-            };
+    {
+        { "UP", "Up" }, { "DOWN", "Down" }, { "LEFT", "Left" }, { "RIGHT", "Right" }
+    };
 
             var sb = new StringBuilder();
             int waitCount = 0;
@@ -1240,7 +1444,8 @@ namespace VirtualController
                 {
                     // 優先順位で並べ替え＋方向キーはキャメルケース
                     var ops = frame.Keys
-                        .Select(k => {
+                        .Select(k =>
+                        {
                             var upper = k.ToUpper();
                             return directionCamel.ContainsKey(upper) ? directionCamel[upper] : upper;
                         })
@@ -1279,10 +1484,11 @@ namespace VirtualController
 
             if (overwrite && MacroListBox.SelectedItems.Count > 0)
             {
-                string macroName = MacroListBox.SelectedItems[MacroListBox.SelectedItems.Count - 1] as string;
+                string macroName = GetSelectedMacroNames().LastOrDefault();
                 if (!string.IsNullOrEmpty(macroName))
                 {
-                    macroManager.SaveMacro(macroName, sb.ToString());
+                    // 相対フォルダ対応で保存する（currentRelativePath を使う）
+                    macroManager.SaveMacroInFolder(currentRelativePath, macroName, sb.ToString());
                     LoadMacroList();
                     return;
                 }
@@ -1302,7 +1508,7 @@ namespace VirtualController
             }
         }
 
-        // --- 1. 設定ファイル読み込み関数を追加 ---
+        // --- 設定ファイル読み込み関数を追加 ---
         private RecordSettingsForm.RecordSettingsConfig LoadRecordSettingsConfig()
         {
             var configPath = Path.Combine(Application.StartupPath, "RecordSettingsConfig.json");
@@ -1316,5 +1522,34 @@ namespace VirtualController
                 return (RecordSettingsForm.RecordSettingsConfig)serializer.ReadObject(fs);
             }
         }
+
+        // 追加: 選択中のマクロ名を安全に取得するヘルパー
+        private List<string> GetSelectedMacroNames(bool includeRelativePath = false)
+        {
+            var names = new List<string>();
+            foreach (var item in MacroListBox.SelectedItems)
+            {
+                if (item is MacroManager.MacroEntry me)
+                {
+                    if (me.IsFolder) continue;
+                    if (string.IsNullOrEmpty(me.Name)) continue;
+                    if (includeRelativePath && !string.IsNullOrEmpty(currentRelativePath))
+                        names.Add(Path.Combine(currentRelativePath, me.Name));
+                    else
+                        names.Add(me.Name);
+                }
+                else
+                {
+                    var s = item?.ToString();
+                    if (string.IsNullOrEmpty(s)) continue;
+                    if (includeRelativePath && !string.IsNullOrEmpty(currentRelativePath))
+                        names.Add(Path.Combine(currentRelativePath, s));
+                    else
+                        names.Add(s);
+                }
+            }
+            return names;
+        }
+
     }
 }
