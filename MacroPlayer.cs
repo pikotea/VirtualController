@@ -192,10 +192,46 @@ namespace VirtualController
                             }
 
                             string innerMacroName = null;
+
+                            // ランダム再生の重み付き選択をサポート
+                            // Random の値を使い、デフォルトは 1（1 未満は 1 として扱う）
+                            Random rand = null;
                             if (isRandom && macroNames.Count > 0)
                             {
-                                var rand = new Random();
-                                innerMacroName = macroNames[rand.Next(macroNames.Count)];
+                                rand = new Random();
+                                // 重みを計算
+                                var weights = new int[macroNames.Count];
+                                int totalWeight = 0;
+                                for (int wi = 0; wi < macroNames.Count; wi++)
+                                {
+                                    int w = 1;
+                                    if (parsedMacros.TryGetValue(macroNames[wi], out var md2) && md2 != null && md2.Random.HasValue)
+                                    {
+                                        if (md2.Random.Value >= 1) w = md2.Random.Value;
+                                        else w = 1;
+                                    }
+                                    weights[wi] = w;
+                                    totalWeight += w;
+                                }
+
+                                if (totalWeight <= 0)
+                                {
+                                    innerMacroName = macroNames[0];
+                                }
+                                else
+                                {
+                                    int r = rand.Next(totalWeight);
+                                    int acc = 0;
+                                    for (int wi = 0; wi < macroNames.Count; wi++)
+                                    {
+                                        acc += weights[wi];
+                                        if (r < acc)
+                                        {
+                                            innerMacroName = macroNames[wi];
+                                            break;
+                                        }
+                                    }
+                                }
                             }
                             else if (macroNames.Count > 0)
                             {
@@ -457,7 +493,6 @@ namespace VirtualController
                     var sw = Stopwatch.StartNew();
                     double nextFrameTime = sw.Elapsed.TotalMilliseconds;
 
-                    Random rand = new Random();
                     while (!token.IsCancellationRequested)
                     {
                         if (prioritizedWaitActions != null && prioritizedWaitActions.Count > 0)
