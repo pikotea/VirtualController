@@ -20,15 +20,114 @@ namespace VirtualController
             this.macroFolder = macroFolder;
         }
 
-        // --- マクロファイルのパース処理を元の仕様に合わせて修正 ---
-        public List<Dictionary<string, string>> ParseToFrameArray(string macroName)
+        // 新: マクロのメタデータ + フレーム配列を保持するコンテナ
+        public class MacroData
         {
-            string path = Path.Combine(macroFolder, macroName + ".csv");
-            return MacroFrame.ParseToFrameArray(path);
+            public Dictionary<string, object> PropsRaw { get; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            public List<string> Triggers { get; set; }
+            public List<string> TriggerWaits { get; set; }
+            public int? Interval { get; set; }
+            public double? Frame { get; set; }
+            public int? Random { get; set; }
+            public int? Loop { get; set; }
+            public List<Dictionary<string, string>> Frames { get; } = new List<Dictionary<string, string>>();
+
+            // 追加: パースエラー情報
+            public bool HasParseError { get; set; } = false;
+            public string ParseErrorMessage { get; set; }
         }
 
-        // PlayAsync の Task.Run 内部を元の仕様に合わせて修正
-        // 先に全マクロを読み込み・パースしてから Task.Run に渡す（ネスト再生時に再読み込みしない）
+        // 追加: マクロファイルを読み、props（コメント行）と frames を返すヘルパー
+        private MacroData ParseMacroFileWithProps(string path, bool applyAxisReverse = false)
+        {
+            var data = new MacroData();
+
+            string[] lines;
+            try
+            {
+                lines = File.ReadAllLines(path);
+            }
+            catch (Exception ex)
+            {
+                data.HasParseError = true;
+                data.ParseErrorMessage = $"マクロファイルを開けませんでした: {Path.GetFileName(path)}\n{ex.Message}";
+                return data;
+            }
+
+            foreach (var raw in lines)
+            {
+                var line = raw.Trim();
+                if (!line.StartsWith("#")) continue;
+                var idx = line.IndexOf(':');
+                if (idx < 0) continue;
+                var key = line.Substring(1, idx - 1).Trim().ToUpper();
+                var val = line.Substring(idx + 1).Trim();
+
+                data.PropsRaw[key] = val;
+
+                if (key == "TRIGGER")
+                {
+                    var items = val.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                   .Select(s => s.Trim().ToUpper())
+                                   .Where(s => !string.IsNullOrEmpty(s))
+                                   .ToList();
+                    if (applyAxisReverse)
+                    {
+                        for (int i = 0; i < items.Count; i++)
+                        {
+                            if (items[i] == "LEFT") items[i] = "RIGHT";
+                            else if (items[i] == "RIGHT") items[i] = "LEFT";
+                        }
+                    }
+                    data.Triggers = items;
+                }
+                else if (key == "TRIGGERWAIT")
+                {
+                    var items = val.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                   .Select(s => s.Trim().ToUpper())
+                                   .Where(s => !string.IsNullOrEmpty(s))
+                                   .ToList();
+                    if (applyAxisReverse)
+                    {
+                        for (int i = 0; i < items.Count; i++)
+                        {
+                            if (items[i] == "LEFT") items[i] = "RIGHT";
+                            else if (items[i] == "RIGHT") items[i] = "LEFT";
+                        }
+                    }
+                    data.TriggerWaits = items;
+                }
+                else if (key == "INTERVAL")
+                {
+                    if (int.TryParse(val, out int v)) data.Interval = v;
+                }
+                else if (key == "FRAME")
+                {
+                    if (double.TryParse(val, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double dv)) data.Frame = dv;
+                }
+                else if (key == "RANDOM")
+                {
+                    if (int.TryParse(val, out int v)) data.Random = v;
+                }
+                else if (key == "LOOP")
+                {
+                    if (int.TryParse(val, out int v)) data.Loop = v;
+                }
+            }
+
+            // frames のパースは検証付きで行う
+            if (!MacroFrame.TryParseToFrameArray(path, out var frames, out var error))
+            {
+                data.HasParseError = true;
+                data.ParseErrorMessage = $"マクロのパースに失敗しました: {Path.GetFileName(path)}\n{error}";
+                return data;
+            }
+
+            data.Frames.AddRange(frames);
+            return data;
+        }
+
+        // PlayAsync (基本) - preParsed の型を MacroData に変更
         public async Task PlayAsync(
             List<string> macroNames,
             double frameMs,
@@ -38,10 +137,9 @@ namespace VirtualController
             bool xAxisReverse,
             CancellationToken token,
             bool manageTiming = true,
-            Dictionary<string, List<Dictionary<string, string>>> preParsed = null)
+            Dictionary<string, MacroData> preParsed = null)
         {
-            // 先に必要なマクロをすべて読み込み・パースしておく（重複はまとめる）
-            var parsedMacros = preParsed ?? new Dictionary<string, List<Dictionary<string, string>>>(StringComparer.OrdinalIgnoreCase);
+            var parsedMacros = preParsed ?? new Dictionary<string, MacroData>(StringComparer.OrdinalIgnoreCase);
             if (preParsed == null)
             {
                 foreach (var name in macroNames.Distinct(StringComparer.OrdinalIgnoreCase))
@@ -49,12 +147,21 @@ namespace VirtualController
                     try
                     {
                         var path = Path.Combine(macroFolder, name + ".csv");
-                        parsedMacros[name] = MacroFrame.ParseToFrameArray(path);
+                        parsedMacros[name] = ParseMacroFileWithProps(path, applyAxisReverse: xAxisReverse);
                     }
                     catch
                     {
-                        // ファイル読み込み失敗は無視しておく（呼び出し元でログ化されている想定）
+                        // ignore
                     }
+                }
+            }
+
+            // 事前パースでエラーがあれば例外を投げて呼び出し元に処理を任せる
+            foreach (var kv in parsedMacros)
+            {
+                if (kv.Value != null && kv.Value.HasParseError)
+                {
+                    throw new InvalidDataException(kv.Value.ParseErrorMessage ?? $"マクロのパースエラー: {kv.Key}");
                 }
             }
 
@@ -64,10 +171,7 @@ namespace VirtualController
                 ThreadPriority originalPriority = ThreadPriority.Normal;
                 if (manageTiming)
                 {
-                    // 高分解能タイマーを使用開始（内部で参照カウント管理）
                     TimingHelpers.BeginHighResolution();
-
-                    // 再生中はスレッド優先度を一時的に上げる（注意: 短時間に限定）
                     currentThread = Thread.CurrentThread;
                     originalPriority = currentThread.Priority;
                     currentThread.Priority = ThreadPriority.Highest;
@@ -100,21 +204,28 @@ namespace VirtualController
 
                             if (string.IsNullOrEmpty(innerMacroName)) break;
 
-                            // ここでは事前にパース済みデータを使う（なければフォールバックしてパース）
-                            List<Dictionary<string, string>> frameArray = null;
-                            if (!parsedMacros.TryGetValue(innerMacroName, out frameArray))
+                            MacroData md = null;
+                            if (!parsedMacros.TryGetValue(innerMacroName, out md))
                             {
                                 try
                                 {
                                     var path = Path.Combine(macroFolder, innerMacroName + ".csv");
-                                    frameArray = MacroFrame.ParseToFrameArray(path);
-                                    parsedMacros[innerMacroName] = frameArray;
+                                    md = ParseMacroFileWithProps(path, applyAxisReverse: xAxisReverse);
+                                    parsedMacros[innerMacroName] = md;
                                 }
                                 catch
                                 {
-                                    frameArray = new List<Dictionary<string, string>>();
+                                    md = new MacroData();
+                                }
+
+                                if (md.HasParseError)
+                                {
+                                    // パースエラーは例外を投げる
+                                    throw new InvalidDataException(md.ParseErrorMessage ?? $"マクロのパースエラー: {innerMacroName}");
                                 }
                             }
+
+                            var frameArray = md?.Frames ?? new List<Dictionary<string, string>>();
 
                             var keyState = new MacroKeyState();
 
@@ -240,8 +351,7 @@ namespace VirtualController
             }, token);
         }
 
-        // PlayAsyncの引数にジョイスティックと設定を追加
-        // ここでも先にすべてのマクロを読み込み・パースしておく（トリガー解析と再生で再利用）
+        // PlayAsync (joystick-aware) - preParsed 型を MacroData に変更
         public async Task PlayAsync(
             List<string> macroNames,
             double frameMs,
@@ -253,12 +363,11 @@ namespace VirtualController
             SharpDX.DirectInput.Joystick joystick = null,
             RecordSettingsForm.RecordSettingsConfig recordConfig = null,
             bool manageTiming = true,
-            Dictionary<string, List<Dictionary<string, string>>> preParsed = null)
+            Dictionary<string, MacroData> preParsed = null)
         {
             var macroTriggers = new List<(string macroName, List<string> triggers, List<string> waitActions)>();
 
-            // 事前に全マクロをパース（必要に応じてフォールバック）
-            var parsedMacros = preParsed ?? new Dictionary<string, List<Dictionary<string, string>>>(StringComparer.OrdinalIgnoreCase);
+            var parsedMacros = preParsed ?? new Dictionary<string, MacroData>(StringComparer.OrdinalIgnoreCase);
             if (preParsed == null)
             {
                 foreach (var name in macroNames.Distinct(StringComparer.OrdinalIgnoreCase))
@@ -266,79 +375,46 @@ namespace VirtualController
                     try
                     {
                         var path = Path.Combine(macroFolder, name + ".csv");
-                        parsedMacros[name] = MacroFrame.ParseToFrameArray(path);
+                        parsedMacros[name] = ParseMacroFileWithProps(path, applyAxisReverse: xAxisReverse);
                     }
                     catch
                     {
-                        // 無視
+                        // ignore
                     }
+                }
+            }
+
+            // 事前パースでエラーがあればユーザーへ通知して再生を中止
+            foreach (var kv in parsedMacros)
+            {
+                if (kv.Value != null && kv.Value.HasParseError)
+                {
+                    // エラー表示は呼び出し元の UI (MainForm) で行うため、ここでは例外を投げる
+                    throw new InvalidDataException(kv.Value.ParseErrorMessage ?? $"マクロのパースエラー: {kv.Key}");
                 }
             }
 
             foreach (var macroName in macroNames)
             {
-                var macroText = File.ReadAllText(Path.Combine(macroFolder, macroName + ".csv"));
-                var lines = macroText.Split('\n');
-                var triggers = new List<string>();
-                var waitActions = new List<string>();
-                foreach (var line in lines)
-                {
-                    var trimmed = line.Trim();
-                    if (trimmed.StartsWith("#TRIGGER:"))
-                    {
-                        triggers = trimmed.Substring("#TRIGGER:".Length)
-                            .Split(',')
-                            .Select(x =>
-                            {
-                                var key = x.Trim().ToUpper();
-                                if (xAxisReverse)
-                                {
-                                    if (key == "LEFT") key = "RIGHT";
-                                    else if (key == "RIGHT") key = "LEFT";
-                                }
-                                return key;
-                            })
-                            .Where(x => !string.IsNullOrEmpty(x))
-                            .ToList();
-                    }
-                    if (trimmed.StartsWith("#TRIGGERWAIT:"))
-                    {
-                        waitActions = trimmed.Substring("#TRIGGERWAIT:".Length)
-                            .Split(',')
-                            .Select(x =>
-                            {
-                                var key = x.Trim().ToUpper();
-                                if (xAxisReverse)
-                                {
-                                    if (key == "LEFT") key = "RIGHT";
-                                    else if (key == "RIGHT") key = "LEFT";
-                                }
-                                return key;
-                            })
-                            .Where(x => !string.IsNullOrEmpty(x))
-                            .ToList();
-                    }
-                    if (!trimmed.StartsWith("#") && (trimmed.Contains(":") || (trimmed.Length > 0 && !trimmed.StartsWith("#"))))
-                        break;
-                }
+                MacroData md = null;
+                parsedMacros.TryGetValue(macroName, out md);
+                var triggers = md?.Triggers ?? new List<string>();
+                var waitActions = md?.TriggerWaits ?? new List<string>();
                 macroTriggers.Add((macroName, triggers, waitActions));
             }
 
-            var triggerMacros = macroTriggers.Where(mt => mt.triggers.Count > 0).ToList();
-            System.Diagnostics.Debug.WriteLine("[MacroPlayer] triggerMacros:");
+            var triggerMacros = macroTriggers.Where(mt => mt.triggers != null && mt.triggers.Count > 0).ToList();
+            Debug.WriteLine("[MacroPlayer] triggerMacros:");
             foreach (var mt in triggerMacros)
             {
-                System.Diagnostics.Debug.WriteLine(
-                    $"  macroName={mt.macroName}, triggers=[{string.Join(",", mt.triggers)}], waitActions=[{string.Join(",", mt.waitActions)}]"
-                );
+                Debug.WriteLine($"  macroName={mt.macroName}, triggers=[{string.Join(",", mt.triggers)}], waitActions=[{string.Join(",", mt.waitActions)}]");
             }
-            System.Diagnostics.Debug.WriteLine($"[MacroPlayer] joystick: {(joystick == null ? "null" : joystick.ToString())}");
-            System.Diagnostics.Debug.WriteLine($"[MacroPlayer] recordConfig: {(recordConfig == null ? "null" : $"ControllerGuid={recordConfig.ControllerGuid}, ButtonIndices={string.Join(",", recordConfig.ButtonIndices.Select(kv => kv.Key + "=" + (kv.Value?.ToString() ?? "null")))} ZValues={string.Join(",", recordConfig.ZValues.Select(kv => kv.Key + "=" + (kv.Value?.ToString() ?? "null")))}")}");
+            Debug.WriteLine($"[MacroPlayer] joystick: {(joystick == null ? "null" : joystick.ToString())}");
+            Debug.WriteLine($"[MacroPlayer] recordConfig: {(recordConfig == null ? "null" : $"ControllerGuid={recordConfig.ControllerGuid}, ButtonIndices={string.Join(",", recordConfig.ButtonIndices.Select(kv => kv.Key + "=" + (kv.Value?.ToString() ?? "null")))} ZValues={string.Join(",", recordConfig.ZValues.Select(kv => kv.Key + "=" + (kv.Value?.ToString() ?? "null")))}")}");
 
-            // 判定部分
             if (triggerMacros.Count == 0 || joystick == null || recordConfig == null)
             {
-                System.Diagnostics.Debug.WriteLine("[MacroPlayer] PlayAsync(基本) 実行");
+                Debug.WriteLine("[MacroPlayer] PlayAsync(基本) 実行");
                 await PlayAsync(
                     macroNames,
                     frameMs,
@@ -348,23 +424,21 @@ namespace VirtualController
                     xAxisReverse,
                     token,
                     manageTiming,
-                    parsedMacros // 事前パース済みを渡す
+                    parsedMacros
                 );
                 return;
             }
 
-            // すべてのTRIGGERWAIT定義から最初のボタン群を抽出
             List<string> prioritizedWaitActions = null;
             foreach (var mt in triggerMacros)
             {
-                if (mt.waitActions.Count > 0)
+                if (mt.waitActions != null && mt.waitActions.Count > 0)
                 {
                     prioritizedWaitActions = mt.waitActions;
                     break;
                 }
             }
 
-            // 高精度ループに変更：Task.Run 内で高分解能タイマーとスレッド優先度を使用
             await Task.Run(async () =>
             {
                 Thread currentThread = null;
@@ -379,14 +453,13 @@ namespace VirtualController
 
                 try
                 {
-                    System.Diagnostics.Debug.WriteLine("[MacroPlayer] TRIGGERキー待ち状態");
+                    Debug.WriteLine("[MacroPlayer] TRIGGERキー待ち状態");
                     var sw = Stopwatch.StartNew();
                     double nextFrameTime = sw.Elapsed.TotalMilliseconds;
 
                     Random rand = new Random();
                     while (!token.IsCancellationRequested)
                     {
-                        // prioritizedWaitActions がある場合はコントローラに押し続ける状態を反映する（あくまで表示／維持用）
                         if (prioritizedWaitActions != null && prioritizedWaitActions.Count > 0)
                         {
                             var keyState = new MacroKeyState();
@@ -434,31 +507,26 @@ namespace VirtualController
                             controllerService.Controller.SetSliderValue(Xbox360Slider.RightTrigger, rtOn ? byte.MaxValue : (byte)0);
                         }
 
-                        // ここは必ず実行：ジョイスティックを常時ポーリングしてトリガーを検出する
                         bool triggered = false;
                         while (!triggered && !token.IsCancellationRequested)
                         {
                             try
                             {
-                                // joystick 状態取得
                                 var state = joystick.GetCurrentState();
                                 var pressedKeys = new List<string>();
 
-                                // ボタンマッピングから検出
                                 foreach (var kv in recordConfig.ButtonIndices)
                                 {
                                     if (kv.Value != null && state.Buttons != null && state.Buttons.Length > kv.Value.Value && state.Buttons[kv.Value.Value])
                                         pressedKeys.Add(kv.Key.Replace("Button", ""));
                                 }
 
-                                // Z 値マッピング
                                 foreach (var kv in recordConfig.ZValues)
                                 {
                                     if (kv.Value != null && state.Z == kv.Value.Value)
                                         pressedKeys.Add(kv.Key.Replace("Button", ""));
                                 }
 
-                                // POV
                                 if (state.PointOfViewControllers != null && state.PointOfViewControllers.Length > 0)
                                 {
                                     int pov = state.PointOfViewControllers[0];
@@ -472,7 +540,6 @@ namespace VirtualController
                                     else if (pov == 31500) { pressedKeys.Add("UP"); pressedKeys.Add("LEFT"); }
                                 }
 
-                                // トリガー判定
                                 var triggerdMacros = new List<string>();
                                 foreach (var mt in triggerMacros)
                                 {
@@ -485,13 +552,13 @@ namespace VirtualController
                                 if (triggerdMacros.Count > 0)
                                 {
                                     controllerService.AllOff();
-                                    System.Diagnostics.Debug.WriteLine("[MacroPlayer] PlayAsync(ジョイスティック/設定付き) 実行");
+                                    Debug.WriteLine("[MacroPlayer] PlayAsync(ジョイスティック/設定付き) 実行");
 
-                                    var parsedSubset = new Dictionary<string, List<Dictionary<string, string>>>(StringComparer.OrdinalIgnoreCase);
+                                    var parsedSubset = new Dictionary<string, MacroData>(StringComparer.OrdinalIgnoreCase);
                                     foreach (var nm in triggerdMacros)
                                     {
-                                        if (parsedMacros.TryGetValue(nm, out var arr))
-                                            parsedSubset[nm] = arr;
+                                        if (parsedMacros.TryGetValue(nm, out var md2))
+                                            parsedSubset[nm] = md2;
                                     }
 
                                     await PlayAsync(
@@ -503,11 +570,9 @@ namespace VirtualController
                             }
                             catch (Exception ex)
                             {
-                                // GetCurrentState や処理中の例外を捕捉してログに出す
-                                System.Diagnostics.Debug.WriteLine($"[MacroPlayer] joystick 取得/判定で例外: {ex}");
+                                Debug.WriteLine($"[MacroPlayer] joystick 取得/判定で例外: {ex}");
                             }
 
-                            // 次チェックまで高精度で待機（frameMs に同期）
                             nextFrameTime += frameMs / 3;
                             TimingHelpers.WaitUntil(sw, nextFrameTime, token);
                         }
@@ -575,6 +640,15 @@ namespace VirtualController
                             frameCount = 1;
                         keyPart = trimmed.Substring(colonIdx + 1).Trim();
                     }
+                    else
+                    {
+                        // 行が数字のみなら待機指定 (例: "5" -> 5 フレームの待機)
+                        if (int.TryParse(trimmed, out var numericCount) && numericCount >= 1)
+                        {
+                            frameCount = numericCount;
+                            keyPart = "";
+                        }
+                    }
 
                     // キーリストを抽出
                     var keys = keyPart.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
@@ -636,47 +710,185 @@ namespace VirtualController
                 return frameArray;
             }
 
-            public static List<MacroFrame> LoadMacroFile(string path)
+            // 追加: 検証付きパース。失敗時は false を返し error にメッセージを設定する
+            public static bool TryParseToFrameArray(string path, out List<Dictionary<string, string>> frames, out string error)
             {
-                var result = new List<MacroFrame>();
-                foreach (var line in File.ReadAllLines(path))
+                frames = new List<Dictionary<string, string>>();
+                error = null;
+                string[] lines;
+                try
                 {
-                    var frame = Parse(line);
-                    result.Add(frame);
+                    lines = File.ReadAllLines(path);
                 }
-                return result;
+                catch (Exception ex)
+                {
+                    error = ex.Message;
+                    return false;
+                }
+
+                var filteredLines = lines
+                    .Where(line => !line.TrimStart().StartsWith("#"))
+                    .ToArray();
+
+                var frameCounts = new List<int>();
+                var frameKeys = new List<List<string>>();
+                int totalFrames = 0;
+
+                int lineNo = 0;
+                foreach (var line in filteredLines)
+                {
+                    lineNo++;
+                    var trimmed = line.Trim();
+                    if (string.IsNullOrEmpty(trimmed))
+                        continue;
+
+                    int frameCount = 1;
+                    string keyPart = trimmed;
+
+                    int colonIdx = trimmed.IndexOf(':');
+                    if (colonIdx >= 0)
+                    {
+                        var frameStr = trimmed.Substring(0, colonIdx).Trim();
+                        if (!int.TryParse(frameStr, out frameCount) || frameCount < 1)
+                        {
+                            error = $"無効なフレーム数指定（行 {lineNo}）: '{frameStr}'";
+                            return false;
+                        }
+                        keyPart = trimmed.Substring(colonIdx + 1).Trim();
+                    }
+                    else
+                    {
+                        // 行が数字のみなら待機指定 (例: "5" -> 5 フレームの待機)
+                        if (int.TryParse(trimmed, out var numericCount) && numericCount >= 1)
+                        {
+                            frameCount = numericCount;
+                            keyPart = "";
+                        }
+                    }
+
+                    // キーリストを抽出
+                    var keys = keyPart.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                      .Select(k => k.Trim().ToUpper())
+                                      .Where(k => !string.IsNullOrEmpty(k))
+                                      .ToList();
+
+                    // キー指定は任意にする（空行や待機のみの行を許容）
+                    // もしキーが無い場合は空のキーリストとして扱い、エラーにしない。
+                    // 検証: 指定されたキーが MacroKeyState に定義されているか、および矛盾がないかをチェック
+                    var allowedKeys = new HashSet<string>(new MacroKeyState().KeyStates.Keys, StringComparer.OrdinalIgnoreCase);
+                    if (keys.Count > 0)
+                    {
+                        // 左右同時指定禁止
+                        if (keys.Contains("LEFT") && keys.Contains("RIGHT"))
+                        {
+                            error = $"左右が同時に指定されています（行 {lineNo}）: '{line}'";
+                            return false;
+                        }
+                        // 上下同時指定禁止
+                        if (keys.Contains("UP") && keys.Contains("DOWN"))
+                        {
+                            error = $"上下が同時に指定されています（行 {lineNo}）: '{line}'";
+                            return false;
+                        }
+
+                        // 未知のキー禁止
+                        foreach (var k in keys)
+                        {
+                            if (!allowedKeys.Contains(k))
+                            {
+                                error = $"不明なキーが指定されています（行 {lineNo}）: '{k}'";
+                                return false;
+                            }
+                        }
+                    }
+
+                    frameCounts.Add(frameCount);
+                    frameKeys.Add(keys);
+                    totalFrames += frameCount;
+                }
+
+                for (int i = 0; i < totalFrames; i++)
+                    frames.Add(new Dictionary<string, string>());
+
+                int cursor = 0;
+                var lastOnKeys = new HashSet<string>();
+                for (int specIdx = 0; specIdx < frameCounts.Count; specIdx++)
+                {
+                    int frameCount = frameCounts[specIdx];
+                    var keys = frameKeys[specIdx];
+                    if (frameCount > 0)
+                    {
+                        foreach (var key in keys)
+                        {
+                            frames[cursor][key] = "ON";
+                            lastOnKeys.Add(key);
+                        }
+                    }
+
+                    int offFrameIdx = cursor + frameCount;
+                    if (offFrameIdx < frames.Count)
+                    {
+                        foreach (var key in keys)
+                        {
+                            frames[offFrameIdx][key] = "OFF";
+                            lastOnKeys.Remove(key);
+                        }
+                    }
+                    cursor += frameCount;
+                }
+
+                if (lastOnKeys.Count > 0)
+                {
+                    var offFrame = new Dictionary<string, string>();
+                    foreach (var key in lastOnKeys)
+                        offFrame[key] = "OFF";
+                    frames.Add(offFrame);
+                }
+
+                return true;
             }
 
-            public static MacroFrame Parse(string line)
-            {
-                var frame = new MacroFrame();
-                if (string.IsNullOrWhiteSpace(line)) return frame;
-                var items = line.Split(',');
-                foreach (var item in items)
-                {
-                    var kv = item.Split('=');
-                    if (kv.Length == 2)
-                    {
-                        string key = kv[0].Trim().ToUpper();
-                        string val = kv[1].Trim().ToUpper();
-                        if (key == "WAIT")
-                        {
-                            if (int.TryParse(val, out int wait))
-                                frame.WaitFrames = wait;
-                        }
-                        else
-                        {
-                            frame.KeyOps[key] = val;
-                        }
-                    }
-                    else if (kv.Length == 1)
-                    {
-                        string key = kv[0].Trim().ToUpper();
-                        frame.KeyOps[key] = "ON";
-                    }
-                }
-                return frame;
-            }
-        }
-    }
-}
+             public static List<MacroFrame> LoadMacroFile(string path)
+             {
+                 var result = new List<MacroFrame>();
+                 foreach (var line in File.ReadAllLines(path))
+                 {
+                     var frame = Parse(line);
+                     result.Add(frame);
+                 }
+                 return result;
+             }
+
+             public static MacroFrame Parse(string line)
+             {
+                 var frame = new MacroFrame();
+                 if (string.IsNullOrWhiteSpace(line)) return frame;
+                 var items = line.Split(',');
+                 foreach (var item in items)
+                 {
+                     var kv = item.Split('=');
+                     if (kv.Length == 2)
+                     {
+                         string key = kv[0].Trim().ToUpper();
+                         string val = kv[1].Trim().ToUpper();
+                         if (key == "WAIT")
+                         {
+                             if (int.TryParse(val, out int wait))
+                                 frame.WaitFrames = wait;
+                         }
+                         else
+                         {
+                             frame.KeyOps[key] = val;
+                         }
+                     }
+                     else if (kv.Length == 1)
+                     {
+                         string key = kv[0].Trim().ToUpper();
+                         frame.KeyOps[key] = "ON";
+                     }
+                 }
+                 return frame;
+             }
+         }
+     }
+ }

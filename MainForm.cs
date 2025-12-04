@@ -357,6 +357,34 @@ namespace VirtualController
                         recordConfig
                     );
                 }
+                catch (InvalidDataException ex)
+                {
+                    // マクロのパースエラーをユーザーに表示
+                    try
+                    {
+                        this.Invoke((Action)(() =>
+                        {
+                            MessageBox.Show(this, ex.Message, "マクロのパースエラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }));
+                    }
+                    catch
+                    {
+                        // フォームが既に破棄されている可能性があるので無視
+                    }
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        this.Invoke((Action)(() =>
+                        {
+                            MessageBox.Show(this, "再生中にエラーが発生しました:\n" + ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }));
+                    }
+                    catch
+                    {
+                    }
+                }
                 finally
                 {
                     this.Invoke((Action)(() =>
