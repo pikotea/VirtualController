@@ -49,6 +49,11 @@ namespace VirtualController
         // 追加: FileSystemWatcher の自動リロードを一時抑止するフラグ
         private volatile bool suppressWatcherEvents = false;
 
+        // 追加フィールド: デバウンス用タイマーとロック
+        private System.Timers.Timer macroWatcherDebounceTimer;
+        private readonly object macroWatcherLock = new object();
+        private int macroWatcherDebounceMs = 200;
+
         /// <summary>
         /// 必要なデザイナー変数です。
         /// </summary>
@@ -257,29 +262,91 @@ namespace VirtualController
         {
             macroWatcher = new FileSystemWatcher(macroFolder, "*.csv");
             macroWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
+
+            // バッファを増やして大量イベント時のオーバーフローを緩和
+            try
+            {
+                macroWatcher.InternalBufferSize = 64 * 1024; // 64KB
+            }
+            catch
+            {
+                // 一部環境で例外が出る可能性があるので無視して続行
+            }
+
+            // 既存イベントは保持するが、実処理はデバウンスタイマへ委譲する
             macroWatcher.Changed += MacroFolderChanged;
             macroWatcher.Created += MacroFolderChanged;
             macroWatcher.Deleted += MacroFolderChanged;
             macroWatcher.Renamed += MacroFolderChanged;
+
+            // デバウンスタイマー初期化（AutoReset=false で手動再起動）
+            macroWatcherDebounceTimer = new System.Timers.Timer(macroWatcherDebounceMs) { AutoReset = false };
+            macroWatcherDebounceTimer.Elapsed += (s, e) =>
+            {
+                // タイマーから来るスレッドは ThreadPool。ここで UI スレッドへディスパッチする。
+                try
+                {
+                    this.Invoke((Action)(() =>
+                    {
+                        System.Diagnostics.Debug.WriteLine("[MacroPlayer] watcher debounce elapsed - reloading macro list");
+                        try
+                        {
+                            suppressWatcherEvents = true;
+                            LoadMacroList(false);
+                        }
+                        finally
+                        {
+                            // 少し待ってから再度有効化する（余裕時間）
+                            var t = new System.Timers.Timer(200) { AutoReset = false };
+                            t.Elapsed += (s2, e2) =>
+                            {
+                                suppressWatcherEvents = false;
+                                t.Dispose();
+                                System.Diagnostics.Debug.WriteLine("[MacroPlayer] watcher events re-enabled");
+                            };
+                            t.Start();
+                        }
+                    }));
+                }
+                catch (ObjectDisposedException) { /* フォーム破棄時の安全処理 */ }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("[MacroPlayer] debounce handler exception: " + ex);
+                }
+            };
+
             macroWatcher.EnableRaisingEvents = true;
         }
 
-        // ファイル変更時のイベントハンドラ
+        // ファイル変更時のイベントハンドラ（簡素化してデバウンスに集約）
         private void MacroFolderChanged(object sender, FileSystemEventArgs e)
         {
-            // 保存処理などで一時的にイベントを無視する
-            if (suppressWatcherEvents) return;
+            try
+            {
+                // 保存処理などで一時的にイベントを無視する
+                if (suppressWatcherEvents) return;
 
-            // マクロ再生中なら停止
-            if (isMacroPlaying)
-            {
-                this.Invoke((Action)(() => StopMacroIfPlaying()));
-                // マクロ一覧は停止後に更新
-                this.Invoke((Action)(() => LoadMacroList(false)));
+                // デバッグログ（発生を把握する）
+                System.Diagnostics.Debug.WriteLine($"[MacroPlayer] MacroFolderChanged: {e.ChangeType} {e.FullPath}");
+
+                // デバウンス: イベントが来るたびにタイマーを再起動してまとめる
+                lock (macroWatcherLock)
+                {
+                    // 再起動（既に動いていれば停止してからスタート）
+                    macroWatcherDebounceTimer.Stop();
+                    macroWatcherDebounceTimer.Start();
+                }
+
+                // マクロ再生中なら停止要求だけは即時行う（安全のため）
+                if (isMacroPlaying)
+                {
+                    this.Invoke((Action)(() => StopMacroIfPlaying()));
+                    // LoadMacroList はデバウンス後に行う
+                }
             }
-            else
+            catch (Exception ex)
             {
-                this.Invoke((Action)(() => LoadMacroList(false)));
+                System.Diagnostics.Debug.WriteLine("[MacroPlayer] MacroFolderChanged exception: " + ex);
             }
         }
 
