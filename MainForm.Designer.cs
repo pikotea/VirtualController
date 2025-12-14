@@ -512,9 +512,9 @@
             this.RecCautionLabel.ForeColor = System.Drawing.Color.Red;
             this.RecCautionLabel.Location = new System.Drawing.Point(1021, 808);
             this.RecCautionLabel.Name = "RecCautionLabel";
-            this.RecCautionLabel.Size = new System.Drawing.Size(254, 110);
+            this.RecCautionLabel.Size = new System.Drawing.Size(254, 147);
             this.RecCautionLabel.TabIndex = 43;
-            this.RecCautionLabel.Text = "コントローラーが接続されていないか、記録設定が完了していないため、トリガー機能や記録機能が有効になっていません。";
+            this.RecCautionLabel.Text = "コントローラーが接続されていないか、記録設定が完了していないため、トリガー機能と記録機能が有効になっていません。";
             // 
             // MainForm
             // 
