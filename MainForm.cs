@@ -49,9 +49,6 @@ namespace VirtualController
         // 追加: 保存後に優先選択するマクロ名（拡張子なし）
         private string pendingSelectMacroName = null;
 
-        // 追加: FileSystemWatcher の自動リロードを一時抑止するフラグ
-        private volatile bool suppressWatcherEvents = false;
-
         // 追加フィールド: デバウンス用タイマーとロック
         private System.Timers.Timer macroWatcherDebounceTimer;
         private readonly object macroWatcherLock = new object();
@@ -427,7 +424,6 @@ namespace VirtualController
             }
 
             // 既存イベントは保持するが、実処理はデバウンスタイマへ委譲する
-            macroWatcher.Changed += MacroFolderChanged;
             macroWatcher.Created += MacroFolderChanged;
             macroWatcher.Deleted += MacroFolderChanged;
             macroWatcher.Renamed += MacroFolderChanged;
@@ -444,21 +440,9 @@ namespace VirtualController
                         System.Diagnostics.Debug.WriteLine("[MacroPlayer] watcher debounce elapsed - reloading macro list");
                         try
                         {
-                            suppressWatcherEvents = true;
                             LoadMacroList(false);
                         }
-                        finally
-                        {
-                            // 少し待ってから再度有効化する（余暇時間）
-                            var t = new System.Timers.Timer(200) { AutoReset = false };
-                            t.Elapsed += (s2, e2) =>
-                            {
-                                suppressWatcherEvents = false;
-                                t.Dispose();
-                                System.Diagnostics.Debug.WriteLine("[MacroPlayer] watcher events re-enabled");
-                            };
-                            t.Start();
-                        }
+                        catch { }
                     }));
                 }
                 catch (ObjectDisposedException) { /* フォーム破棄時の安全処理 */ }
@@ -476,10 +460,13 @@ namespace VirtualController
         {
             try
             {
-                // 保存処理などで一時的にイベントを無視する
-                if (suppressWatcherEvents) return;
-
                 // デバッグログ（発生を把握する）
+                // 除外: 変更（Changed）はファイルの上書き等で大量発生するため再読み込み対象外とする
+                if (e.ChangeType == WatcherChangeTypes.Changed)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MacroPlayer] Ignored Changed event: {e.FullPath}");
+                    return;
+                }
                 System.Diagnostics.Debug.WriteLine($"[MacroPlayer] MacroFolderChanged: {e.ChangeType} {e.FullPath}");
 
                 // デバウンス: イベントが来るたびにタイマーを再起動してまとめる
@@ -682,9 +669,8 @@ namespace VirtualController
                     macroManager.SaveMacroInFolder(currentRelativePath, savedName, MacroEditTextBox.Text);
 
 
-                    // マクロ一覧再読み込み
+                    // マクロは保存済み。FileSystemWatcher のデバウンスで再読み込みされるのでここでは明示呼び出ししない
                     pendingSelectMacroName = savedName;
-                    LoadMacroList();
                     SaveAsButton.Enabled = false;
                 }
             }
@@ -734,13 +720,11 @@ namespace VirtualController
             {
                 try
                 {
-                    suppressWatcherEvents = true;
                     pendingSelectMacroName = editingMacroName;  // 上書き保存後に優先選択するマクロ名を設定
 
                     macroManager.SaveMacroInFolder(currentRelativePath, editingMacroName, MacroEditTextBox.Text);
                     lastLoadedMacroText = MacroEditTextBox.Text;
                     loadedMacro = MacroPlayer.MacroFrame.LoadMacroFile(Path.Combine(macroFolder, string.IsNullOrEmpty(currentRelativePath) ? editingMacroName + ".csv" : Path.Combine(currentRelativePath, editingMacroName + ".csv")));
-                    LoadMacroList(false);
                     OverwriteSaveButton.Enabled = false;
                     this.Invoke((Action)(() =>
                     {
@@ -750,7 +734,6 @@ namespace VirtualController
                 }
                 finally
                 {
-                    suppressWatcherEvents = false; // ← 必ず解除
                 }
             }
         }
@@ -1518,7 +1501,8 @@ namespace VirtualController
                 {
                     // 相対フォルダ対応で保存する（currentRelativePath を使う）
                     macroManager.SaveMacroInFolder(currentRelativePath, macroName, sb.ToString());
-                    LoadMacroList();
+                    // FileSystemWatcher will trigger reload — remember selection
+                    pendingSelectMacroName = macroName;
                     return;
                 }
             }
@@ -1532,10 +1516,11 @@ namespace VirtualController
                 {
                     string macroName = Path.GetFileNameWithoutExtension(sfd.FileName);
                     macroManager.SaveMacro(macroName, sb.ToString());
-                    LoadMacroList();
-                }
-            }
-        }
+                    // Let watcher reload and restore selection
+                    pendingSelectMacroName = macroName;
+                 }
+             }
+         }
 
         // --- 設定ファイル読み込み関数を追加 ---
         private RecordSettingsForm.RecordSettingsConfig LoadRecordSettingsConfig()
