@@ -21,6 +21,8 @@ namespace VirtualController
         {
             client = new ViGEmClient();
             controller = client.CreateXbox360Controller();
+            // 自動送信を無効にして明示的に SubmitReport() を呼ぶ方式にする
+            controller.AutoSubmitReport = false;
         }
 
         public void Connect()
@@ -30,6 +32,7 @@ namespace VirtualController
             {
                 // コントローラの初期化処理
                 controller = client.CreateXbox360Controller();
+                controller.AutoSubmitReport = false;
             }
             controller.Connect(); // ←必ずConnect()を呼ぶ
         }
@@ -62,6 +65,8 @@ namespace VirtualController
                     controller.SetButtonState(kvp.Key, kvp.Value);
                 }
             }
+            // 変更: 一連の更新後にまとめてレポート送信
+            controller.SubmitReport();
         }
 
         public void AllOff()
@@ -76,6 +81,7 @@ namespace VirtualController
             controller.SetButtonState(Xbox360Button.RightShoulder, false);
             controller.SetSliderValue(Xbox360Slider.LeftTrigger, 0);
             controller.SetSliderValue(Xbox360Slider.RightTrigger, 0);
+            controller.SubmitReport();
         }
     }
 }

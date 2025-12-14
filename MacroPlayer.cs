@@ -345,6 +345,8 @@ namespace VirtualController
                                 controllerService.Controller.SetSliderValue(Xbox360Slider.LeftTrigger, ltOn ? byte.MaxValue : (byte)0);
                                 controllerService.Controller.SetSliderValue(Xbox360Slider.RightTrigger, rtOn ? byte.MaxValue : (byte)0);
 
+                                controllerService.Controller.SubmitReport();
+
                                 // 次フレーム予定時刻を更新してハイブリッドで待機
                                 nextFrameTime += frameMs;
                                 TimingHelpers.WaitUntil(sw, nextFrameTime, token);
@@ -533,7 +535,8 @@ namespace VirtualController
                            bool rtOn = keyState.KeyStates.ContainsKey("RT") && keyState.KeyStates["RT"];
                            controllerService.Controller.SetSliderValue(Xbox360Slider.LeftTrigger, ltOn ? byte.MaxValue : (byte)0);
                            controllerService.Controller.SetSliderValue(Xbox360Slider.RightTrigger, rtOn ? byte.MaxValue : (byte)0);
-                       }
+                           controllerService.Controller.SubmitReport();
+                        }
 
                        bool triggered = false;
                        while (!triggered && !token.IsCancellationRequested)
