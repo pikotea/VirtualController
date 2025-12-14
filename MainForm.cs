@@ -1286,6 +1286,7 @@ namespace VirtualController
         private void UpdateRecButtonEnabled()
         {
             RecButton.Enabled = currentJoystick != null && IsRecordSettingsValid();
+            RecCautionLabel.Visible = false;
         }
 
         private async void RecButton_Click(object sender, EventArgs e)

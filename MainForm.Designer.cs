@@ -49,6 +49,7 @@
             this.ControllerPanel = new System.Windows.Forms.Panel();
             this.RTButton = new System.Windows.Forms.Button();
             this.LTButton = new System.Windows.Forms.Button();
+            this.RecCautionLabel = new System.Windows.Forms.Label();
             this.ControllerPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -246,16 +247,14 @@
             // 
             // MacroListBox
             // 
+            this.MacroListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.MacroListBox.Font = new System.Drawing.Font("メイリオ", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.MacroListBox.FormattingEnabled = true;
-            this.MacroListBox.ItemHeight = 27;
+            this.MacroListBox.ItemHeight = 20;
             this.MacroListBox.Location = new System.Drawing.Point(45, 386);
             this.MacroListBox.Name = "MacroListBox";
-            // OwnerDraw を有効化（アイコン表示用）
-            this.MacroListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.MacroListBox.ItemHeight = 20;
             this.MacroListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.MacroListBox.Size = new System.Drawing.Size(501, 193);
+            this.MacroListBox.Size = new System.Drawing.Size(501, 184);
             this.MacroListBox.TabIndex = 21;
             this.MacroListBox.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.MacroListBox_DrawItem);
             this.MacroListBox.SelectedIndexChanged += new System.EventHandler(this.MacroListBox_SelectedIndexChanged);
@@ -507,12 +506,23 @@
             this.LTButton.MouseDown += new System.Windows.Forms.MouseEventHandler(this.LTButton_MouseDown);
             this.LTButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.LTButton_MouseUp);
             // 
+            // RecCautionLabel
+            // 
+            this.RecCautionLabel.Font = new System.Drawing.Font("メイリオ", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.RecCautionLabel.ForeColor = System.Drawing.Color.Red;
+            this.RecCautionLabel.Location = new System.Drawing.Point(1021, 808);
+            this.RecCautionLabel.Name = "RecCautionLabel";
+            this.RecCautionLabel.Size = new System.Drawing.Size(254, 110);
+            this.RecCautionLabel.TabIndex = 43;
+            this.RecCautionLabel.Text = "コントローラーが接続されていないか、記録設定が完了していないため、トリガー機能や記録機能が有効になっていません。";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.ClientSize = new System.Drawing.Size(1288, 964);
+            this.Controls.Add(this.RecCautionLabel);
             this.Controls.Add(this.ControllerPanel);
             this.Controls.Add(this.RecButton);
             this.Controls.Add(this.RecSettingButton);
@@ -582,6 +592,7 @@
         private System.Windows.Forms.Panel ControllerPanel;
         private System.Windows.Forms.Button RTButton;
         private System.Windows.Forms.Button LTButton;
+        private System.Windows.Forms.Label RecCautionLabel;
     }
 }
 
